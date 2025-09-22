@@ -91,7 +91,9 @@ export default function RegisterClient({
       });
 
       if (res?.error) {
-        router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+        router.push(
+          `/auth/login?callbackUrl=${encodeURIComponent(callbackUrl)}`
+        );
       } else {
         router.push(res?.url || callbackUrl);
       }
@@ -102,85 +104,143 @@ export default function RegisterClient({
     }
   }
 
+  // Strength labels
+  const strengthLabel = [
+    "Very weak",
+    "Weak",
+    "Fair",
+    "Good",
+    "Strong",
+    "Very strong",
+  ][strength];
+
   return (
-    <div className="mx-auto max-w-md mt-10 border rounded-lg p-6 space-y-5 bg-white">
-      <header>
-        <h1 className="text-xl font-semibold">Create your account</h1>
-        <p className="text-sm text-muted-foreground">
-          Already have one?{" "}
-          <a href="/auth/login" className="underline">
-            Sign in
-          </a>
-        </p>
-      </header>
-
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <div>
-          <Label>Email</Label>
-          <Input
-            type="email"
-            placeholder="you@example.com"
-            {...register("email")}
-          />
-          {formState.errors.email && (
-            <p className="text-xs text-rose-600">
-              {formState.errors.email.message}
+    <main className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-background">
+      {/* Left / Hero panel (hidden on small) */}
+      <section className="relative hidden lg:block">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-500" />
+        <div className="relative h-full w-full flex items-center justify-center p-12">
+          <div className="max-w-md text-white">
+            <h2 className="text-3xl font-bold leading-tight">
+              Welcome to your membership hub
+            </h2>
+            <p className="mt-4 text-white/90">
+              Register to manage dues, activities, and your membership
+              profile—all in one place.
             </p>
-          )}
+          </div>
         </div>
+      </section>
 
-        <div>
-          <Label>Username</Label>
-          <Input placeholder="e.g., kwame" {...register("username")} />
-          {formState.errors.username && (
-            <p className="text-xs text-rose-600">
-              {formState.errors.username.message}
-            </p>
-          )}
-        </div>
+      {/* Right / Form panel */}
+      <section className="flex items-center justify-center px-4 sm:px-6 lg:px-8 py-10">
+        <div className="w-full max-w-sm sm:max-w-md md:max-w-lg">
+          <div className="rounded-xl border bg-card text-card-foreground shadow-sm p-6 sm:p-8">
+            <header className="space-y-1">
+              <h1 className="text-2xl font-semibold tracking-tight">
+                Create your account
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Already have one?{" "}
+                <a href="/auth/login" className="underline">
+                  Sign in
+                </a>
+              </p>
+            </header>
 
-        <div>
-          <Label>Password</Label>
-          <Input
-            type="password"
-            autoComplete="new-password"
-            {...register("password")}
-          />
-          <p className="text-[11px] text-muted-foreground mt-1">
-            Strength:{" "}
-            <b>
-              {
-                ["Very weak", "Weak", "Fair", "Good", "Strong", "Very strong"][
-                  strength
-                ]
-              }
-            </b>
+            <form onSubmit={handleSubmit(onSubmit)} className="mt-6 space-y-5">
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  {...register("email")}
+                />
+                {formState.errors.email && (
+                  <p className="mt-1 text-xs text-rose-600" aria-live="polite">
+                    {formState.errors.email.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="username">Username</Label>
+                <Input
+                  id="username"
+                  placeholder="e.g., kwame"
+                  {...register("username")}
+                />
+                {formState.errors.username && (
+                  <p className="mt-1 text-xs text-rose-600" aria-live="polite">
+                    {formState.errors.username.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  autoComplete="new-password"
+                  {...register("password")}
+                />
+                {/* Strength indicator */}
+                <div className="mt-2">
+                  <div className="flex gap-1">
+                    {[0, 1, 2, 3, 4].map((i) => (
+                      <span
+                        key={i}
+                        className={[
+                          "h-1 w-full rounded",
+                          strength > i ? "bg-green-500" : "bg-muted",
+                        ].join(" ")}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-[11px] text-muted-foreground mt-1">
+                    Strength: <b>{strengthLabel}</b>
+                  </p>
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="confirm">Confirm Password</Label>
+                <Input
+                  id="confirm"
+                  type="password"
+                  autoComplete="new-password"
+                  {...register("confirm")}
+                />
+                {formState.errors.confirm && (
+                  <p className="mt-1 text-xs text-rose-600" aria-live="polite">
+                    {formState.errors.confirm.message}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <Label htmlFor="memberId">Member ID (optional)</Label>
+                <Input
+                  id="memberId"
+                  placeholder="mxxxxxxxx"
+                  {...register("memberId")}
+                />
+              </div>
+
+              <Button type="submit" className="w-full" disabled={submitting}>
+                {submitting ? "Creating account…" : "Create account"}
+              </Button>
+            </form>
+          </div>
+
+          {/* Small footer for mobile/medium */}
+          <p className="mt-6 text-center text-xs text-muted-foreground">
+            By creating an account, you agree to our Terms & Privacy.
           </p>
         </div>
-
-        <div>
-          <Label>Confirm Password</Label>
-          <Input
-            type="password"
-            autoComplete="new-password"
-            {...register("confirm")}
-          />
-          {formState.errors.confirm && (
-            <p className="text-xs text-rose-600">
-              {formState.errors.confirm.message}
-            </p>
-          )}
-        </div>
-
-        <div>
-          <Label>Member ID (optional)</Label>
-          <Input placeholder="mxxxxxxxx" {...register("memberId")} />
-        </div>
-
-        <Button type="submit" className="w-full" disabled={submitting}>
-          {submitting ? "Creating account…" : "Create account"}
-        </Button>
-      </form>
-    </div>
+      </section>
+    </main>
   );
 }
