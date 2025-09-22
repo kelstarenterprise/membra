@@ -1,0 +1,415 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+// ===== Enums that remain =====
+enum MemberStatus {
+  PROSPECT
+  PENDING
+  ACTIVE
+  SUSPENDED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum MembershipLevel {
+  ORDINARY
+  EXECUTIVE
+  DELEGATE
+  OTHER
+}
+
+enum EducationLevel {
+  PRIMARY
+  SECONDARY
+  TERTIARY
+  POSTGRADUATE
+  VOCATIONAL
+  OTHER
+}
+
+enum UserRole {
+  ADMIN
+  MEMBER
+}
+
+enum BillingCycle {
+  ONE_TIME
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  MOBILE_MONEY
+  BANK_TRANSFER
+  WAIVER
+}
+
+enum DueStatus {
+  PENDING
+  PARTIAL
+  PAID
+  WAIVED
+  CANCELLED
+}
+
+enum ActivityStatus {
+  INVITED
+  REGISTERED
+  ATTENDED
+  ABSENT
+  CANCELLED
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  SMS
+}
+
+enum CardStatus {
+  PENDING
+  PRINTED
+  ISSUED
+  REVOKED
+  EXPIRED
+}
+
+// ===== New: MemberCategory (Level) =====
+model MemberCategory {
+  id          String   @id @default(cuid())
+  code        String   @unique              // e.g., GOLD, SILVER, BRONZE
+  name        String                        // display name
+  description String?
+  rank        Int?                          // for ordering (lower = higher tier)
+  active      Boolean  @default(true)
+
+  // Reverse relations
+  members     Member[]
+  duesPlans   DuesPlan[]
+  assignedDues AssignedDues[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("member_categories")
+
+}
+// --- keep your existing models/enums above ---
+// Auth.js models (required)
+model Account {
+  id                 String  @id @default(cuid())
+  userId             String
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String? @db.Text
+  access_token       String? @db.Text
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String? @db.Text
+  session_state      String?
+  oauth_token_secret String?
+  oauth_token        String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@map("accounts")
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@map("verification_tokens")
+}
+
+
+// ===== Core Auth =====
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  email     String   @unique
+  passwordHash String       // <— hashed with bcrypt
+  role      UserRole @default(MEMBER)
+
+  memberId  String?  @unique
+  member    Member?  @relation(fields: [memberId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // reverse audit relations
+  createdMembers Member[] @relation("MemberCreatedBy")
+  updatedMembers Member[] @relation("MemberUpdatedBy")
+
+  // NextAuth relations
+  accounts Account[]
+  sessions Session[]
+
+  @@map("users")
+}
+
+// ===== Members =====
+model Member {
+  id           String   @id @default(cuid())
+  membershipId String?  @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Required personal info
+  firstName                       String
+  lastName                        String
+  dateOfBirth                     DateTime
+  gender                          Gender
+  nationalId                      String   @unique
+  phone                           String
+  residentialAddress              String
+  regionConstituencyElectoralArea String
+
+  // Optional personal info
+  email                 String?  @unique
+  occupation            String?
+  highestEducationLevel EducationLevel?
+
+  // Membership details
+  membershipLevel MembershipLevel
+  branchWard      String?
+  recruitedBy     String?
+
+  // ===== Level selection via MemberCategory =====
+  memberCategoryId String?                 // make required if you always assign a level
+  memberCategory   MemberCategory? @relation(fields: [memberCategoryId], references: [id], onDelete: SetNull)
+
+  // Status & balance
+  status             MemberStatus   @default(PROSPECT)
+  outstandingBalance Float          @default(0)
+
+  // Attachments & legacy
+  passportPictureUrl String?
+  nationality        String?
+
+  // Relations
+  user        User?
+
+  // Audit (optional)
+  createdById String?
+  updatedById String?
+  createdBy   User?    @relation("MemberCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  updatedBy   User?    @relation("MemberUpdatedBy", fields: [updatedById], references: [id], onDelete: SetNull)
+
+  // Feature relations
+  payments      Payment[]
+  activities    ActivityRegistration[]
+  idCards       MemberIdCard[]
+  notifications Notification[]
+  assignedDues  AssignedDues[]
+
+  // Search helpers
+  @@index([status, membershipLevel])
+  @@index([lastName, firstName])
+  @@index([branchWard])
+  @@index([memberCategoryId])
+  @@map("members")
+}
+
+// ===== Finance (Plans, Assigned Dues, Payments) =====
+model DuesPlan {
+  id          String        @id @default(cuid())
+  code        String        @unique
+  name        String
+  description String?
+  amount      Decimal       @db.Decimal(14, 2)
+  currency    String        @default("GHS")
+  cycle       BillingCycle  @default(ONE_TIME)
+  active      Boolean       @default(true)
+
+  // Optional scoping by level (MemberCategory)
+  memberCategoryId String?
+  memberCategory   MemberCategory? @relation(fields: [memberCategoryId], references: [id], onDelete: SetNull)
+
+  // (You can keep MembershipLevel too if you need both concepts)
+  // targetLevel MembershipLevel?
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  payments    Payment[]
+  assigned    AssignedDues[]
+
+  @@index([memberCategoryId])
+  @@map("dues_plans")
+}
+
+model AssignedDues {
+  id           String     @id @default(cuid())
+  memberId     String
+  member       Member     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  planId       String?
+  plan         DuesPlan?  @relation(fields: [planId], references: [id], onDelete: SetNull)
+
+  // Optional: tag the due with the level that required it (useful for audits)
+  memberCategoryId String?
+  memberCategory   MemberCategory? @relation(fields: [memberCategoryId], references: [id], onDelete: SetNull)
+
+  // Financials
+  amount       Decimal    @db.Decimal(14, 2)
+  currency     String     @default("GHS")
+
+  // Period info
+  dueDate      DateTime?
+  periodStart  DateTime?
+  periodEnd    DateTime?
+
+  status       DueStatus  @default(PENDING)
+  reference    String?    @unique
+  notes        String?
+
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // reverse relation to payments that target this due
+  payments     Payment[]
+
+  @@index([memberId, status])
+  @@index([memberId, dueDate])
+  @@index([memberId, periodStart, periodEnd])
+  @@index([memberCategoryId])
+  @@map("assigned_dues")
+}
+
+model Payment {
+  id            String         @id @default(cuid())
+  memberId      String
+  member        Member         @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  // OPTIONAL: payment made against a specific assigned due
+  assignedDueId String?
+  assignedDue   AssignedDues?  @relation(fields: [assignedDueId], references: [id], onDelete: SetNull)
+
+  // OPTIONAL: payment made with reference to a plan (generic contributions)
+  planId        String?
+  plan          DuesPlan?      @relation(fields: [planId], references: [id], onDelete: SetNull)
+
+  description   String?
+  amount        Decimal        @db.Decimal(14, 2)
+  currency      String         @default("GHS")
+  method        PaymentMethod  @default(CASH)
+  paidAt        DateTime       @default(now())
+  reference     String?        @unique
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([memberId, paidAt])
+  @@index([assignedDueId])
+  @@map("payments")
+}
+
+// ===== Activities & Registrations =====
+model Activity {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  startsAt    DateTime
+  endsAt      DateTime?
+  location    String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  registrations ActivityRegistration[]
+
+  @@index([startsAt])
+  @@map("activities")
+}
+
+model ActivityRegistration {
+  id         String         @id @default(cuid())
+  activityId String
+  memberId   String
+  status     ActivityStatus @default(INVITED)
+  notes      String?
+
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  member     Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@unique([activityId, memberId])
+  @@index([memberId])
+  @@map("activity_registrations")
+}
+
+// ===== Notifications =====
+model Notification {
+  id        String              @id @default(cuid())
+  memberId  String
+  member    Member              @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  title     String
+  body      String
+  channel   NotificationChannel @default(IN_APP)
+  sentAt    DateTime?
+  readAt    DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([memberId, createdAt])
+  @@map("notifications")
+}
+
+// ===== Printable ID Cards =====
+model MemberIdCard {
+  id            String     @id @default(cuid())
+  memberId      String
+  member        Member     @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  cardNumber    String     @unique
+  issuedAt      DateTime?
+  expiresAt     DateTime?
+  status        CardStatus @default(PENDING)
+
+  frontImageUrl String?
+  backImageUrl  String?
+  qrData        String?
+
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  @@index([memberId, status])
+  @@map("member_id_cards")
+}
