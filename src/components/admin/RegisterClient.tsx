@@ -142,7 +142,7 @@ export default function RegisterClient({
               </h1>
               <p className="text-sm text-muted-foreground">
                 Already have one?{" "}
-                <a href="/auth/login" className="underline">
+                <a href="/login" className="underline">
                   Sign in
                 </a>
               </p>
