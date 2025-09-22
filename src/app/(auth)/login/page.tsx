@@ -106,7 +106,7 @@ function LoginForm() {
                   <p>
                     <Link
                       className="underline underline-offset-4"
-                      href="/auth/forgot-password"
+                      href="/forgot-password"
                     >
                       Forgot password?
                     </Link>
@@ -117,10 +117,10 @@ function LoginForm() {
                       className="underline underline-offset-4"
                       href={
                         sp.get("callbackUrl")
-                          ? `/auth/register?callbackUrl=${encodeURIComponent(
+                          ? `/register?callbackUrl=${encodeURIComponent(
                               sp.get("callbackUrl") as string
                             )}`
-                          : "/auth/register"
+                          : "register"
                       }
                     >
                       Create one
