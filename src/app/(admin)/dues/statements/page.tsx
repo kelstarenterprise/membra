@@ -4,6 +4,20 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import type {
+  Html2PdfImport,
+  Html2PdfModule,
+  Html2PdfOptions,
+} from "@/types/html2pdf";
+
+// API Response types
+type ApiResponse<T> = {
+  data: T;
+};
+
+type MembersApiResponse = ApiResponse<Member[]>;
+type SubscriptionsApiResponse = ApiResponse<MemberSub[]>;
+type PaymentsApiResponse = ApiResponse<Payment[]>;
 
 type Member = {
   id: string;
@@ -62,12 +76,21 @@ export default function AdminMemberStatementPage() {
   // load member options (debounced by 250ms)
   useEffect(() => {
     const t = setTimeout(async () => {
-      const url = q.trim()
-        ? `/api/members?q=${encodeURIComponent(q.trim())}`
-        : "/api/members";
-      const r = await fetch(url);
-      const j = await r.json();
-      setMemberOptions(j.data);
+      try {
+        const url = q.trim()
+          ? `/api/members?q=${encodeURIComponent(q.trim())}`
+          : "/api/members";
+        const r = await fetch(url);
+        if (!r.ok) {
+          console.error('Failed to fetch members:', r.statusText);
+          return;
+        }
+        const j: MembersApiResponse = await r.json();
+        setMemberOptions(j.data || []);
+      } catch (error) {
+        console.error('Error fetching members:', error);
+        setMemberOptions([]);
+      }
     }, 250);
     return () => clearTimeout(t);
   }, [q]);
@@ -77,21 +100,37 @@ export default function AdminMemberStatementPage() {
     if (!memberId) return;
     setLoading(true);
 
-    const subUrl = new URL(
-      `${location.origin}/api/subscriptions/member-subscriptions`
-    );
-    subUrl.searchParams.set("memberId", memberId);
-    // we’ll filter client-side by period/year for flexibility
-    const payUrl = new URL(`${location.origin}/api/subscriptions/payments`);
-    payUrl.searchParams.set("memberId", memberId);
+    try {
+      const subUrl = new URL(
+        `${location.origin}/api/subscriptions/member-subscriptions`
+      );
+      subUrl.searchParams.set("memberId", memberId);
+      // we'll filter client-side by period/year for flexibility
+      const payUrl = new URL(`${location.origin}/api/subscriptions/payments`);
+      payUrl.searchParams.set("memberId", memberId);
 
-    const [sr, pr] = await Promise.all([fetch(subUrl), fetch(payUrl)]);
-    const sj = await sr.json();
-    const pj = await pr.json();
+      const [sr, pr] = await Promise.all([fetch(subUrl), fetch(payUrl)]);
+      
+      if (!sr.ok || !pr.ok) {
+        console.error('Failed to fetch data:', {
+          subscriptions: sr.statusText,
+          payments: pr.statusText
+        });
+        return;
+      }
+      
+      const sj: SubscriptionsApiResponse = await sr.json();
+      const pj: PaymentsApiResponse = await pr.json();
 
-    setSubs(sj.data as MemberSub[]);
-    setPays(pj.data as Payment[]);
-    setLoading(false);
+      setSubs(sj.data || []);
+      setPays(pj.data || []);
+    } catch (error) {
+      console.error('Error loading statement data:', error);
+      setSubs([]);
+      setPays([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // derived: selected member object
@@ -143,20 +182,47 @@ export default function AdminMemberStatementPage() {
   const handleExportPdf = async () => {
     const el = printRef.current;
     if (!el) return;
-    const html2pdf = (await import("html2pdf.js")).default;
-    const opt = {
-      margin: 10,
-      filename: `statement_${
-        selectedMember
-          ? `${selectedMember.firstName}_${selectedMember.lastName}`
-          : "member"
-      }.pdf`,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-      pagebreak: { mode: ["css", "legacy"] },
-    };
-    await html2pdf().from(el).set(opt).save();
+
+    try {
+      // Dynamic import with proper TypeScript handling
+      const mod = await import("html2pdf.js") as Html2PdfImport;
+      
+      // Handle both CJS and ESM module formats
+      const html2pdf: Html2PdfModule = 
+        ('default' in mod && typeof mod.default === 'function') 
+          ? mod.default 
+          : (mod as Html2PdfModule);
+
+      const opt: Html2PdfOptions = {
+        margin: 10,
+        filename: `statement_${
+          selectedMember
+            ? `${selectedMember.firstName}_${selectedMember.lastName}`
+            : "member"
+        }.pdf`,
+        image: { 
+          type: "jpeg", 
+          quality: 0.98 
+        },
+        html2canvas: { 
+          scale: 2, 
+          useCORS: true 
+        },
+        jsPDF: { 
+          unit: "mm", 
+          format: "a4", 
+          orientation: "portrait" 
+        },
+        pagebreak: { 
+          mode: ["css", "legacy"] 
+        },
+      };
+
+      await html2pdf().from(el).set(opt).save();
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      // You might want to show a user-friendly error message here
+    }
   };
 
   return (

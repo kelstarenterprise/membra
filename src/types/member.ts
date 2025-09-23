@@ -45,6 +45,7 @@ export type Member = {
   id: string;
   membershipId?: string; // Auto-generated membership ID
   createdAt: string; // ISO - Date of Registration
+  updatedAt: string; // ISO - Last updated
   
   // Required personal information
   firstName: string;
@@ -66,10 +67,21 @@ export type Member = {
   branchWard?: string; // Branch / Ward (dropdown of local branches)
   recruitedBy?: string; // Optional: name or member ID of recruiter
   
+  // Member Category (dynamic from database)
+  memberCategoryId?: string; // Reference to MemberCategory
+  memberCategory?: {
+    id: string;
+    code: string;
+    name: string;
+    description?: string;
+    rank?: number;
+    active: boolean;
+  };
+  
   // System fields
   level: MemberCategory; // Keep for backward compatibility
   status: MemberStatus;
-  outstandingBalance: number;
+  outstandingBalance: number; // Consider using string for precise decimal handling
   
   // Attachments
   passportPictureUrl?: string | null;

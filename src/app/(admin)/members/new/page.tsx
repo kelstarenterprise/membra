@@ -16,7 +16,7 @@ export default function NewMemberPage() {
       body: JSON.stringify(values),
     });
     if (!res.ok) {
-      const j = await res.json().catch(() => ({ error: 'Unknown error' }));
+      const j = await res.json().catch(() => ({ error: "Unknown error" }));
       throw new Error(j.error || "Create failed");
     }
     const json = (await res.json()) as { data: Member };
@@ -36,7 +36,7 @@ export default function NewMemberPage() {
         submitting={false}
         onSubmit={async (values) => {
           await apiCreate(values);
-          router.push("/admin/members"); // back to list
+          router.push("/members"); // back to list
         }}
       />
     </div>

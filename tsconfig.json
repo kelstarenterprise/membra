@@ -11,8 +11,11 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
+
     "jsx": "preserve",
     "incremental": true,
+    "types": ["node", "next", "next/image-types/global"],
+    "typeRoots": ["./src/types", "./node_modules/@types"],
     "plugins": [
       {
         "name": "next"
@@ -22,6 +25,12 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "include": [
+    "next-env.d.ts",
+    "src",
+    "**/*.ts",
+    "**/*.tsx",
+    ".next/types/**/*.ts"
+  ],
   "exclude": ["node_modules"]
 }

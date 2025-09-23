@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
-import { hash } from "bcrypt";
+import { hash } from "bcryptjs";
 
 export const revalidate = 0;
 export const dynamic = "force-dynamic";

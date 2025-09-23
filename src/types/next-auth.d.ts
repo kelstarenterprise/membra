@@ -11,10 +11,17 @@ declare module "next-auth" {
       role?: "ADMIN" | "MEMBER" | "GUEST";
     };
   }
+  interface User extends DefaultUser {
+    role: Role;
+    memberId?: string | null;
+    membershipId?: string | null;
+  }
 }
 
 declare module "next-auth/jwt" {
   interface JWT {
     role?: "ADMIN" | "MEMBER" | "GUEST";
+    memberId?: string | null;
+    membershipId?: string | null;
   }
 }

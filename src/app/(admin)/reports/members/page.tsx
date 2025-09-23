@@ -70,15 +70,39 @@ export default function MembersReportPage() {
   const exportPDF = async () => {
     const el = printRef.current;
     if (!el) return;
-    const html2pdf = (await import("html2pdf.js")).default;
-    const opt = {
+
+    // Dynamic import with CJS/ESM compatibility
+    const mod = await import("html2pdf.js");
+    const html2pdf = (mod as { default?: unknown }).default ?? mod;
+
+    // Define html2pdf options type and function interface
+    interface Html2PdfFunction {
+      (): Html2PdfInstance;
+    }
+    
+    interface Html2PdfInstance {
+      from(element: HTMLElement): Html2PdfInstance;
+      set(options: Html2PdfOptions): Html2PdfInstance;
+      save(): Promise<void>;
+    }
+    
+    type Html2PdfOptions = {
+      margin?: number;
+      filename?: string;
+      image?: { type: string; quality: number };
+      html2canvas?: { scale: number; useCORS: boolean };
+      jsPDF?: { unit: string; format: string; orientation: string };
+    };
+
+    const opt: Html2PdfOptions = {
       margin: 10,
       filename: "members.pdf",
       image: { type: "jpeg", quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
     };
-    await html2pdf().from(el).set(opt).save();
+
+    await (html2pdf as Html2PdfFunction)().from(el).set(opt).save();
   };
 
   return (

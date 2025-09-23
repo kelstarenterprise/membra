@@ -15,6 +15,18 @@ export default function MembersTable() {
   const [err, setErr] = useState<string | null>(null);
   const [search, setSearch] = useState("");
 
+  // Safe number coercion + "GHS 0.00" formatting
+  const toNumber = (v: unknown): number => {
+    if (typeof v === "number") return v;
+    if (typeof v === "string") {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : 0;
+    }
+    return 0;
+  };
+
+  const formatGhs = (v: unknown) => `GHS ${toNumber(v).toFixed(2)}`;
+
   async function apiList(): Promise<Member[]> {
     const res = await fetch("/api/members", {
       cache: "no-store",
@@ -127,7 +139,7 @@ export default function MembersTable() {
                     </span>
                   </td>
                   <td className="px-3 py-2 text-right">
-                    GHS {m.outstandingBalance.toFixed(2)}
+                    {formatGhs(m.outstandingBalance)}
                   </td>
                   <td className="px-3 py-2">
                     <div className="flex justify-end gap-2">

@@ -94,6 +94,9 @@ export function prismaToMember(
     id: prismaMember.id,
     membershipId: prismaMember.membershipId ?? undefined,
     createdAt: prismaMember.createdAt.toISOString(),
+    updatedAt:
+      prismaMember.updatedAt.toISOString?.() ??
+      prismaMember.createdAt.toISOString(),
 
     firstName: prismaMember.firstName,
     lastName: prismaMember.lastName,
@@ -113,17 +116,17 @@ export function prismaToMember(
     branchWard: prismaMember.branchWard ?? undefined,
     recruitedBy: prismaMember.recruitedBy ?? undefined,
 
-    // map relation -> frontend string code
+    // map relation -> frontend string code with fallback
     level: (prismaMember.memberCategory?.code ??
       "BEGINNER") as MemberCategoryCode,
+
     status: prismaMember.status as MemberStatus,
-    outstandingBalance: Number(prismaMember.outstandingBalance),
+    outstandingBalance: Number(prismaMember.outstandingBalance ?? 0),
 
     passportPictureUrl: prismaMember.passportPictureUrl ?? undefined,
     nationality: prismaMember.nationality ?? undefined,
   };
 }
-
 /** ===== Service ===== */
 export class MemberService {
   static async getAllMembers(searchQuery?: string): Promise<Member[]> {

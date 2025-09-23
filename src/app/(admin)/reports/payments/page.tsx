@@ -12,6 +12,9 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 
+/* ===== Data types ===== */
+type ApiList<T> = { data: T };
+
 type Member = {
   id: string;
   firstName: string;
@@ -39,6 +42,38 @@ type PaymentRow = {
   reference?: string;
   createdAt: string;
 };
+
+/* ===== Minimal local types for html2pdf.js (no 'any') ===== */
+type Html2PdfImageType = "jpeg" | "png" | "webp";
+type JsPdfUnit = "pt" | "mm" | "cm" | "in" | "px";
+type JsPdfOrientation = "portrait" | "landscape";
+type JsPdfFormat = "a4" | "letter" | string | [number, number];
+
+type Html2PdfOptions = {
+  margin?: number | number[];
+  filename?: string;
+  image?: { type?: Html2PdfImageType; quality?: number };
+  html2canvas?: { scale?: number; useCORS?: boolean };
+  jsPDF?: {
+    unit?: JsPdfUnit;
+    format?: JsPdfFormat;
+    orientation?: JsPdfOrientation;
+  };
+  pagebreak?: { mode?: Array<"css" | "legacy" | "avoid-all" | "avoid-id"> };
+};
+
+type Html2PdfInstance = {
+  from: (el: HTMLElement) => Html2PdfInstance;
+  set: (opt: Html2PdfOptions) => Html2PdfInstance;
+  save: () => Promise<void>;
+};
+
+type Html2PdfFactory = () => Html2PdfInstance;
+
+function isFactory(x: unknown): x is Html2PdfFactory {
+  return typeof x === "function";
+}
+/* ========================================================= */
 
 export default function PaymentsReportPage() {
   // filters
@@ -68,9 +103,11 @@ export default function PaymentsReportPage() {
 
   // load plans
   useEffect(() => {
-    fetch("/api/subscriptions/plans")
-      .then((r) => r.json())
-      .then((j) => setPlans(j.data));
+    (async () => {
+      const r = await fetch("/api/subscriptions/plans");
+      const j: ApiList<Plan[]> = await r.json();
+      setPlans(j.data);
+    })();
   }, []);
 
   // member search (debounced)
@@ -80,7 +117,7 @@ export default function PaymentsReportPage() {
         ? `/api/members?q=${encodeURIComponent(memberQ.trim())}`
         : "/api/members";
       const r = await fetch(url);
-      const j = await r.json();
+      const j: ApiList<Member[]> = await r.json();
       setMemberOptions(j.data);
     }, 250);
     return () => clearTimeout(t);
@@ -95,8 +132,8 @@ export default function PaymentsReportPage() {
     if (planId) url.searchParams.set("planId", planId);
 
     const r = await fetch(url);
-    const j = await r.json();
-    setRows(j.data as PaymentRow[]);
+    const j: ApiList<PaymentRow[]> = await r.json();
+    setRows(j.data);
     setLoading(false);
   };
 
@@ -144,8 +181,16 @@ export default function PaymentsReportPage() {
   const exportPDF = async () => {
     const el = printRef.current;
     if (!el) return;
-    const html2pdf = (await import("html2pdf.js")).default;
-    const opt = {
+
+    const mod = await import("html2pdf.js");
+    const maybeFactory: unknown =
+      "default" in mod
+        ? (mod as { default: unknown }).default
+        : (mod as unknown);
+    if (!isFactory(maybeFactory)) return;
+    const html2pdf = maybeFactory;
+
+    const opt: Html2PdfOptions = {
       margin: 10,
       filename: `payments_${from || "all"}_${to || "all"}.pdf`,
       image: { type: "jpeg", quality: 0.98 },
@@ -153,6 +198,7 @@ export default function PaymentsReportPage() {
       jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
       pagebreak: { mode: ["css", "legacy"] },
     };
+
     await html2pdf().from(el).set(opt).save();
   };
 
@@ -401,6 +447,7 @@ function escapeCsv(v: string) {
   const needs = /[",\n]/.test(v);
   return needs ? `"${v.replace(/"/g, '""')}"` : v;
 }
+
 function downloadBlob(content: string, filename: string, type: string) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);

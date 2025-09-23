@@ -3,6 +3,10 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 
+/* ========= Data types ========= */
+type ApiSingle<T> = { data: T };
+type ApiList<T> = { data: T[] };
+
 type Member = {
   id: string;
   firstName: string;
@@ -39,6 +43,38 @@ type Payment = {
   createdAt: string;
 };
 
+/* ===== Minimal local types for html2pdf.js (no `any`) ===== */
+type Html2PdfImageType = "jpeg" | "png" | "webp";
+type JsPdfUnit = "pt" | "mm" | "cm" | "in" | "px";
+type JsPdfOrientation = "portrait" | "landscape";
+type JsPdfFormat = "a4" | "letter" | string | [number, number];
+
+type Html2PdfOptions = {
+  margin?: number | number[];
+  filename?: string;
+  image?: { type?: Html2PdfImageType; quality?: number };
+  html2canvas?: { scale?: number; useCORS?: boolean };
+  jsPDF?: {
+    unit?: JsPdfUnit;
+    format?: JsPdfFormat;
+    orientation?: JsPdfOrientation;
+  };
+  pagebreak?: { mode?: Array<"css" | "legacy" | "avoid-all" | "avoid-id"> };
+};
+
+type Html2PdfInstance = {
+  from: (el: HTMLElement) => Html2PdfInstance;
+  set: (opt: Html2PdfOptions) => Html2PdfInstance;
+  save: () => Promise<void>;
+};
+
+type Html2PdfFactory = () => Html2PdfInstance;
+
+function isHtml2PdfFactory(x: unknown): x is Html2PdfFactory {
+  return typeof x === "function";
+}
+/* ========================================================= */
+
 export default function MyStatementPage() {
   const [member, setMember] = useState<Member | null>(null);
   const [subs, setSubs] = useState<MemberSub[]>([]);
@@ -51,19 +87,20 @@ export default function MyStatementPage() {
     (async () => {
       setLoading(true);
 
-      // 1) Try /api/members/me (recommended after auth wiring)
       let me: Member | null = null;
+
+      // 1) Try /api/members/me
       try {
         const r = await fetch("/api/members/me");
         if (r.ok) {
-          const j = await r.json();
-          me = j.data as Member;
+          const j: ApiSingle<Member> = await r.json();
+          me = j.data;
         }
       } catch {
-        /* ignore */
+        // ignore network errors
       }
 
-      // 2) Fallback: check URL ?memberId= for local testing
+      // 2) Fallback via query param search
       if (!me) {
         const sp = new URLSearchParams(location.search);
         const fallbackId = sp.get("memberId") ?? "";
@@ -71,15 +108,13 @@ export default function MyStatementPage() {
           const r = await fetch(
             `/api/members?q=${encodeURIComponent(fallbackId)}`
           );
-          const j = await r.json();
-          const found =
-            (j.data as Member[]).find((m) => m.id === fallbackId) ??
-            (j.data as Member[])[0]; // if searching by email/name
+          const j: ApiList<Member> = await r.json();
+          const found = j.data.find((m) => m.id === fallbackId) ?? j.data[0];
           if (found) me = found;
         }
       }
 
-      // 3) If still no member, stop here
+      // 3) If still no member, stop
       if (!me) {
         setMember(null);
         setSubs([]);
@@ -90,15 +125,17 @@ export default function MyStatementPage() {
 
       setMember(me);
 
-      // fetch statement data
+      // fetch statement data for member
       const [sr, pr] = await Promise.all([
         fetch(`/api/subscriptions/member-subscriptions?memberId=${me.id}`),
         fetch(`/api/subscriptions/payments?memberId=${me.id}`),
       ]);
-      const sj = await sr.json();
-      const pj = await pr.json();
-      setSubs(sj.data as MemberSub[]);
-      setPays(pj.data as Payment[]);
+
+      const sj: ApiList<MemberSub> = await sr.json();
+      const pj: ApiList<Payment> = await pr.json();
+
+      setSubs(sj.data);
+      setPays(pj.data);
       setLoading(false);
     })();
   }, []);
@@ -120,20 +157,27 @@ export default function MyStatementPage() {
   const handleExportPdf = async () => {
     const el = printRef.current;
     if (!el) return;
-    const html2pdf = (await import("html2pdf.js")).default;
-    await html2pdf()
-      .from(el)
-      .set({
-        margin: 10,
-        filename: `statement_${
-          member ? `${member.firstName}_${member.lastName}` : "member"
-        }.pdf`,
-        image: { type: "jpeg", quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true },
-        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-        pagebreak: { mode: ["css", "legacy"] },
-      })
-      .save();
+
+    const mod = await import("html2pdf.js");
+    const maybeFactory: unknown =
+      "default" in mod
+        ? (mod as { default: unknown }).default
+        : (mod as unknown);
+    if (!isHtml2PdfFactory(maybeFactory)) return;
+    const html2pdf = maybeFactory;
+
+    const opts: Html2PdfOptions = {
+      margin: 10,
+      filename: `statement_${
+        member ? `${member.firstName}_${member.lastName}` : "member"
+      }.pdf`,
+      image: { type: "jpeg", quality: 0.98 },
+      html2canvas: { scale: 2, useCORS: true },
+      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+      pagebreak: { mode: ["css", "legacy"] },
+    };
+
+    await html2pdf().from(el).set(opts).save();
   };
 
   return (

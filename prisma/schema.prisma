@@ -216,7 +216,7 @@ model Member {
 
   // Status & balance
   status             MemberStatus   @default(PROSPECT)
-  outstandingBalance Float          @default(0)
+  outstandingBalance Decimal        @default(0) @db.Decimal(14, 2)
 
   // Attachments & legacy
   passportPictureUrl String?

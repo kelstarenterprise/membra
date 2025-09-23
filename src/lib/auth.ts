@@ -3,7 +3,7 @@ import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { prisma } from "@/lib/prisma";
-import { compare } from "bcrypt";
+import { compare } from "bcryptjs";
 import { z } from "zod";
 import type { Role } from "@/lib/roles";
 

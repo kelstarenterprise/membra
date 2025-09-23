@@ -43,9 +43,37 @@ type Aggregated = {
   total: number;
 };
 
+/* ===== Local, minimal types for html2pdf.js (no 'any') ===== */
+type Html2PdfImageType = "jpeg" | "png" | "webp";
+type JsPdfUnit = "pt" | "mm" | "cm" | "in" | "px";
+type JsPdfOrientation = "portrait" | "landscape";
+type JsPdfFormat = "a4" | "letter" | string | [number, number];
+
+type Html2PdfOptions = {
+  margin?: number | number[];
+  filename?: string;
+  image?: { type?: Html2PdfImageType; quality?: number };
+  html2canvas?: { scale?: number; useCORS?: boolean };
+  jsPDF?: {
+    unit?: JsPdfUnit;
+    format?: JsPdfFormat;
+    orientation?: JsPdfOrientation;
+  };
+  pagebreak?: { mode?: Array<"css" | "legacy" | "avoid-all" | "avoid-id"> };
+};
+
+type Html2PdfInstance = {
+  from: (el: HTMLElement) => Html2PdfInstance;
+  set: (opt: Html2PdfOptions) => Html2PdfInstance;
+  save: () => Promise<void>;
+};
+
+type Html2PdfFactory = () => Html2PdfInstance;
+/* ========================================================== */
+
 export default function OutstandingReportPage() {
   // filters
-  const [period, setPeriod] = useState<string>(""); // exact, e.g. "2025-09"; leave empty for all
+  const [period, setPeriod] = useState<string>(""); // "YYYY-MM", empty => all
   const [level, setLevel] = useState<string>(""); // empty => all
   const [levels, setLevels] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
@@ -54,7 +82,7 @@ export default function OutstandingReportPage() {
   const [rows, setRows] = useState<PendingRow[]>([]);
   const printRef = useRef<HTMLDivElement>(null);
 
-  // load levels from members
+  // load levels from members (unique, sorted)
   useEffect(() => {
     (async () => {
       const r = await fetch("/api/members");
@@ -63,9 +91,12 @@ export default function OutstandingReportPage() {
         new Set(
           (j.data as Member[])
             .map((m) => m.level)
-            .filter((v: string | null | undefined) => v && v.trim().length > 0)
+            .filter(
+              (v: string | null | undefined): v is string =>
+                !!v && v.trim().length > 0
+            )
         )
-      ) as string[];
+      );
       uniq.sort();
       setLevels(uniq);
     })();
@@ -86,7 +117,7 @@ export default function OutstandingReportPage() {
     setLoading(false);
   };
 
-  // aggregate by member
+  // aggregate by member (no 'any')
   const aggregated: Aggregated[] = useMemo(() => {
     const map = new Map<string, Aggregated>();
     for (const r of rows) {
@@ -136,14 +167,22 @@ export default function OutstandingReportPage() {
   const exportPDF = async () => {
     const el = printRef.current;
     if (!el) return;
-    const html2pdf = (await import("html2pdf.js")).default;
-    const opt = {
+
+    const mod = await import("html2pdf.js");
+    const html2pdf: Html2PdfFactory =
+      "default" in mod && typeof mod.default === "function"
+        ? (mod.default as Html2PdfFactory)
+        : (mod as unknown as Html2PdfFactory);
+
+    const opt: Html2PdfOptions = {
       margin: 10,
       filename: `outstanding_${period || "all"}_${level || "all-levels"}.pdf`,
       image: { type: "jpeg", quality: 0.98 },
       html2canvas: { scale: 2, useCORS: true },
       jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+      pagebreak: { mode: ["css", "legacy"] },
     };
+
     await html2pdf().from(el).set(opt).save();
   };
 
@@ -258,9 +297,6 @@ export default function OutstandingReportPage() {
                 ))}
               </tbody>
             </table>
-
-            {/* Optional: show raw pending lines (expandable) */}
-            {/* You can add a Details accordion per member if you'd like */}
           </div>
         )}
       </section>
@@ -291,6 +327,7 @@ function escapeCsv(v: string) {
   const needs = /[",\n]/.test(v);
   return needs ? `"${v.replace(/"/g, '""')}"` : v;
 }
+
 function downloadBlob(content: string, filename: string, type: string) {
   const blob = new Blob([content], { type });
   const url = URL.createObjectURL(blob);

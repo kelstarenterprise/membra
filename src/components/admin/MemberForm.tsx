@@ -1,6 +1,7 @@
 "use client";
+
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, type SubmitHandler } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -15,28 +16,46 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Member,
-  MemberCategory,
-  MemberStatus,
-  Gender,
-  MembershipLevel,
-  EducationLevel,
-} from "@/types/member";
-import {
-  MEMBER_STATUS,
-  CATEGORY,
-  GENDER,
-  MEMBERSHIP_LEVEL,
-  EDUCATION_LEVEL,
-} from "@/types/member";
 
+// Literal arrays for UI
+const GENDERS = ["MALE", "FEMALE", "OTHER"] as const;
+type GenderUnion = (typeof GENDERS)[number] | ""; // "" allowed in form
+
+const STATUSES = ["PROSPECT", "PENDING", "ACTIVE", "SUSPENDED"] as const;
+type StatusUnion = (typeof STATUSES)[number] | "" | undefined;
+
+const LEVELS = ["ORDINARY", "EXECUTIVE", "DELEGATE", "OTHER"] as const;
+type LevelUnion = (typeof LEVELS)[number] | "";
+
+const EDU = [
+  "PRIMARY",
+  "SECONDARY",
+  "TERTIARY",
+  "POSTGRADUATE",
+  "VOCATIONAL",
+  "OTHER",
+] as const;
+type EduUnion = (typeof EDU)[number] | "" | undefined;
+
+// Type guard helpers to narrow incoming strings to the literal unions
+function isOneOf<T extends readonly string[]>(
+  arr: T,
+  v: string
+): v is T[number] {
+  return (arr as readonly string[]).includes(v);
+}
+const toGender = (v: string): GenderUnion => (isOneOf(GENDERS, v) ? v : "");
+const toStatus = (v: string): StatusUnion => (isOneOf(STATUSES, v) ? v : "");
+const toLevel = (v: string): LevelUnion => (isOneOf(LEVELS, v) ? v : "");
+const toEdu = (v: string): EduUnion => (isOneOf(EDU, v) ? v : "");
+
+// Zod schema that allows "" during editing
 const MemberSchema = z.object({
-  // Required personal information
   firstName: z.string().min(2, "First name is required"),
   lastName: z.string().min(2, "Last name is required"),
   dateOfBirth: z.string().min(1, "Date of birth is required"),
-  gender: z.enum(GENDER),
+
+  gender: z.union([z.enum(GENDERS), z.literal("")]),
   nationalId: z.string().min(5, "National ID / Voter ID Number is required"),
   phone: z.string().min(10, "Phone number is required"),
   residentialAddress: z.string().min(10, "Residential address is required"),
@@ -44,21 +63,27 @@ const MemberSchema = z.object({
     .string()
     .min(3, "Region / Constituency / Electoral Area is required"),
 
-  // Optional personal information
-  email: z.string().email("Provide a valid email").optional().or(z.literal("")),
+  email: z
+    .union([
+      z.string().email("Provide a valid email"),
+      z.literal(""),
+      z.undefined(),
+    ])
+    .optional(),
   occupation: z.string().optional(),
-  highestEducationLevel: z.enum(EDUCATION_LEVEL).optional(),
+  highestEducationLevel: z
+    .union([z.enum(EDU), z.literal(""), z.undefined()])
+    .optional(),
 
-  // Membership details
-  membershipLevel: z.enum(MEMBERSHIP_LEVEL),
+  membershipLevel: z
+    .union([z.enum(LEVELS), z.literal("")])
+    .refine((v) => v !== "", { message: "Membership level is required" }),
   branchWard: z.string().optional(),
   recruitedBy: z.string().optional(),
 
-  // System fields (backward compatibility)
-  level: z.enum(CATEGORY),
-  status: z.enum(MEMBER_STATUS),
+  level: z.string().min(1, "Member category is required"),
+  status: z.union([z.enum(STATUSES), z.literal(""), z.undefined()]).optional(),
 
-  // File input – optional; if provided ensure it's an image under ~5MB
   passportPicture: z
     .any()
     .optional()
@@ -71,12 +96,9 @@ const MemberSchema = z.object({
             fileList[0]?.type
           ) &&
           fileList[0]?.size <= 5 * 1024 * 1024),
-      {
-        message: "Passport photo must be JPG/PNG/WebP and ≤ 5MB",
-      }
+      { message: "Passport photo must be JPG/PNG/WebP and ≤ 5MB" }
     ),
 
-  // Legacy fields - keep for backward compatibility
   nationality: z.string().optional(),
 });
 
@@ -87,79 +109,110 @@ export default function MemberForm({
   onSubmit,
   submitting,
 }: {
-  initial?: Partial<Member> & { passportPictureUrl?: string | null };
+  initial?: Partial<{
+    firstName: string;
+    lastName: string;
+    dateOfBirth: string;
+    gender: GenderUnion;
+    nationalId: string;
+    phone: string;
+    residentialAddress: string;
+    regionConstituencyElectoralArea: string;
+    email?: string | null;
+    occupation?: string | null;
+    highestEducationLevel?: EduUnion | null;
+    membershipLevel?: LevelUnion;
+    branchWard?: string | null;
+    recruitedBy?: string | null;
+    level?: string;
+    status?: StatusUnion;
+    nationality?: string | null;
+    passportPictureUrl?: string | null;
+  }>;
   submitting?: boolean;
-  onSubmit: (values: MemberFormValues) => void;
+  onSubmit: SubmitHandler<MemberFormValues>;
 }) {
+  const [memberCategories, setMemberCategories] = useState<
+    Array<{ id: string; code: string; name: string }>
+  >([]);
+  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [categoriesError, setCategoriesError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/member-categories")
+      .then((res) => {
+        if (!res.ok)
+          throw new Error(`Failed to load categories: ${res.statusText}`);
+        return res.json();
+      })
+      .then((data) => {
+        if (data?.data) setMemberCategories(data.data);
+        else throw new Error("No categories data received");
+        setCategoriesError(null);
+      })
+      .catch((error) => {
+        console.error("Error loading member categories:", error);
+        setCategoriesError(error.message || "Failed to load categories");
+      })
+      .finally(() => setCategoriesLoading(false));
+  }, []);
+
   const form = useForm<MemberFormValues>({
     resolver: zodResolver(MemberSchema),
     defaultValues: {
-      // Required personal information
       firstName: initial?.firstName ?? "",
       lastName: initial?.lastName ?? "",
       dateOfBirth: initial?.dateOfBirth ?? "",
-      gender: (initial?.gender as Gender) ?? "",
+      gender: (initial?.gender as GenderUnion) ?? "",
       nationalId: initial?.nationalId ?? "",
       phone: initial?.phone ?? "",
       residentialAddress: initial?.residentialAddress ?? "",
       regionConstituencyElectoralArea:
         initial?.regionConstituencyElectoralArea ?? "",
 
-      // Optional personal information
       email: initial?.email ?? "",
       occupation: initial?.occupation ?? "",
-      highestEducationLevel:
-        (initial?.highestEducationLevel as EducationLevel) ?? "",
+      highestEducationLevel: (initial?.highestEducationLevel as EduUnion) ?? "",
 
-      // Membership details
-      membershipLevel: (initial?.membershipLevel as MembershipLevel) ?? "",
+      membershipLevel: (initial?.membershipLevel as LevelUnion) ?? "",
       branchWard: initial?.branchWard ?? "",
       recruitedBy: initial?.recruitedBy ?? "",
 
-      // System fields (backward compatibility)
-      level: (initial?.level as MemberCategory) ?? "BEGINNER",
-      status: (initial?.status as MemberStatus) ?? "PROSPECT",
+      level: initial?.level ?? "",
+      status: (initial?.status as StatusUnion) ?? "PROSPECT",
 
-      // Legacy fields
       nationality: initial?.nationality ?? "",
       passportPicture: undefined,
     },
   });
 
-  // Preview for new uploads or existing URL
   const [previewUrl, setPreviewUrl] = useState<string | null>(
     initial?.passportPictureUrl ?? null
   );
 
   useEffect(() => {
     form.reset({
-      // Required personal information
       firstName: initial?.firstName ?? "",
       lastName: initial?.lastName ?? "",
       dateOfBirth: initial?.dateOfBirth ?? "",
-      gender: (initial?.gender as Gender) ?? "",
+      gender: (initial?.gender as GenderUnion) ?? "",
       nationalId: initial?.nationalId ?? "",
       phone: initial?.phone ?? "",
       residentialAddress: initial?.residentialAddress ?? "",
       regionConstituencyElectoralArea:
         initial?.regionConstituencyElectoralArea ?? "",
 
-      // Optional personal information
       email: initial?.email ?? "",
       occupation: initial?.occupation ?? "",
-      highestEducationLevel:
-        (initial?.highestEducationLevel as EducationLevel) ?? "",
+      highestEducationLevel: (initial?.highestEducationLevel as EduUnion) ?? "",
 
-      // Membership details
-      membershipLevel: (initial?.membershipLevel as MembershipLevel) ?? "",
+      membershipLevel: (initial?.membershipLevel as LevelUnion) ?? "",
       branchWard: initial?.branchWard ?? "",
       recruitedBy: initial?.recruitedBy ?? "",
 
-      // System fields (backward compatibility)
-      level: (initial?.level as MemberCategory) ?? "BEGINNER",
-      status: (initial?.status as MemberStatus) ?? "PROSPECT",
+      level: initial?.level ?? "",
+      status: (initial?.status as StatusUnion) ?? "PROSPECT",
 
-      // Legacy fields
       nationality: initial?.nationality ?? "",
       passportPicture: undefined,
     });
@@ -238,8 +291,8 @@ export default function MemberForm({
               Gender <span className="text-red-500">*</span>
             </Label>
             <Select
-              value={form.watch("gender")}
-              onValueChange={(v) => form.setValue("gender", v as Gender)}
+              value={form.watch("gender") ?? ""}
+              onValueChange={(v) => form.setValue("gender", toGender(v))}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select gender" />
@@ -252,7 +305,7 @@ export default function MemberForm({
             </Select>
             {form.formState.errors.gender && (
               <p className="text-xs text-red-600">
-                {form.formState.errors.gender.message}
+                {String(form.formState.errors.gender.message)}
               </p>
             )}
           </div>
@@ -296,7 +349,7 @@ export default function MemberForm({
             />
             {form.formState.errors.email && (
               <p className="text-xs text-red-600">
-                {form.formState.errors.email.message}
+                {String(form.formState.errors.email.message)}
               </p>
             )}
           </div>
@@ -345,21 +398,20 @@ export default function MemberForm({
           <div>
             <Label>Highest Education Level</Label>
             <Select
-              value={form.watch("highestEducationLevel")}
+              value={form.watch("highestEducationLevel") ?? ""}
               onValueChange={(v) =>
-                form.setValue("highestEducationLevel", v as EducationLevel)
+                form.setValue("highestEducationLevel", toEdu(v))
               }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select education level" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="PRIMARY">Primary</SelectItem>
-                <SelectItem value="SECONDARY">Secondary</SelectItem>
-                <SelectItem value="TERTIARY">Tertiary</SelectItem>
-                <SelectItem value="POSTGRADUATE">Postgraduate</SelectItem>
-                <SelectItem value="VOCATIONAL">Vocational</SelectItem>
-                <SelectItem value="OTHER">Other</SelectItem>
+                {EDU.map((v) => (
+                  <SelectItem key={v} value={v}>
+                    {v[0] + v.slice(1).toLowerCase()}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -378,19 +430,22 @@ export default function MemberForm({
               Membership Level <span className="text-red-500">*</span>
             </Label>
             <Select
-              value={form.watch("membershipLevel")}
+              value={form.watch("membershipLevel") ?? ""}
               onValueChange={(v) =>
-                form.setValue("membershipLevel", v as MembershipLevel)
+                form.setValue("membershipLevel", toLevel(v), {
+                  shouldValidate: true,
+                })
               }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select membership level" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="ORDINARY">Ordinary</SelectItem>
-                <SelectItem value="EXECUTIVE">Executive</SelectItem>
-                <SelectItem value="DELEGATE">Delegate</SelectItem>
-                <SelectItem value="OTHER">Other</SelectItem>
+                {LEVELS.map((v) => (
+                  <SelectItem key={v} value={v}>
+                    {v[0] + v.slice(1).toLowerCase()}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
             {form.formState.errors.membershipLevel && (
@@ -410,37 +465,64 @@ export default function MemberForm({
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label>Member Category</Label>
+            <Label>
+              Member Category <span className="text-red-500">*</span>
+            </Label>
             <Select
               value={form.watch("level")}
-              onValueChange={(v) => form.setValue("level", v as MemberCategory)}
+              onValueChange={(v) => form.setValue("level", v)}
+              disabled={categoriesLoading || !!categoriesError}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Select category" />
+                <SelectValue
+                  placeholder={
+                    categoriesLoading
+                      ? "Loading categories..."
+                      : categoriesError
+                      ? "Error loading categories"
+                      : "Select category"
+                  }
+                />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="GOLD">Gold</SelectItem>
-                <SelectItem value="SILVER">Silver</SelectItem>
-                <SelectItem value="BRONZE">Bronze</SelectItem>
-                <SelectItem value="VIP">VIP</SelectItem>
-                <SelectItem value="BEGINNER">Beginner</SelectItem>
+                {memberCategories.map((category) => (
+                  <SelectItem key={category.id} value={category.code}>
+                    {category.name}
+                  </SelectItem>
+                ))}
+                {!categoriesLoading &&
+                  memberCategories.length === 0 &&
+                  !categoriesError && (
+                    <SelectItem value="" disabled>
+                      No categories available
+                    </SelectItem>
+                  )}
               </SelectContent>
             </Select>
+            {categoriesError && (
+              <p className="text-xs text-red-600 mt-1">{categoriesError}</p>
+            )}
+            {form.formState.errors.level && (
+              <p className="text-xs text-red-600 mt-1">
+                {form.formState.errors.level.message}
+              </p>
+            )}
           </div>
           <div>
             <Label>Status</Label>
             <Select
-              value={form.watch("status")}
-              onValueChange={(v) => form.setValue("status", v as MemberStatus)}
+              value={form.watch("status") ?? ""}
+              onValueChange={(v) => form.setValue("status", toStatus(v))}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Select status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="PROSPECT">Prospect</SelectItem>
-                <SelectItem value="PENDING">Pending</SelectItem>
-                <SelectItem value="ACTIVE">Active</SelectItem>
-                <SelectItem value="SUSPENDED">Suspended</SelectItem>
+                {STATUSES.map((v) => (
+                  <SelectItem key={v} value={v}>
+                    {v[0] + v.slice(1).toLowerCase()}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -473,7 +555,7 @@ export default function MemberForm({
             />
             {form.formState.errors.passportPicture && (
               <p className="text-xs text-red-600">
-                {form.formState.errors.passportPicture.message as string}
+                {String(form.formState.errors.passportPicture.message)}
               </p>
             )}
             <p className="text-xs text-muted-foreground mt-1">
@@ -485,8 +567,8 @@ export default function MemberForm({
               <Image
                 src={previewUrl}
                 alt="Passport preview"
-                width={96} // same as h-24 (24*4=96px)
-                height={96} // same as w-24
+                width={96}
+                height={96}
                 className="rounded object-cover border shadow-sm"
               />
             </div>
