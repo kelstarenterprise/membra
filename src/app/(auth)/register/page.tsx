@@ -13,7 +13,7 @@ export default async function Page({
     ? sp.callbackUrl[0]
     : sp?.callbackUrl;
 
-  const callbackUrl = callbackUrlParam ?? "/member";
+  const callbackUrl = callbackUrlParam ?? "/members";
 
   return <RegisterClient callbackUrl={callbackUrl} />;
 }
