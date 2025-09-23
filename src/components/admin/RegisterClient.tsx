@@ -91,9 +91,7 @@ export default function RegisterClient({
       });
 
       if (res?.error) {
-        router.push(
-          `/auth/login?callbackUrl=${encodeURIComponent(callbackUrl)}`
-        );
+        router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
       } else {
         router.push(res?.url || callbackUrl);
       }
