@@ -6,7 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { FormField } from "@/components/forms/FormField";
 import Link from "next/link";
 
 function LoginForm() {
@@ -64,29 +64,36 @@ function LoginForm() {
                 Sign in
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <form onSubmit={onSubmit} className="space-y-4">
-                <div>
-                  <Label htmlFor="id">Email or Username</Label>
+            <CardContent className="pt-6">
+              <form onSubmit={onSubmit} className="space-y-6">
+                <FormField
+                  label="Email or Username"
+                  required
+                  id="login-id"
+                >
                   <Input
-                    id="id"
+                    id="login-id"
                     value={id}
                     onChange={(e) => setId(e.target.value)}
                     placeholder="you@example.com or username"
                     autoFocus
                   />
-                </div>
-                <div>
-                  <Label htmlFor="password">Password</Label>
+                </FormField>
+                
+                <FormField
+                  label="Password"
+                  required
+                  id="login-password"
+                >
                   <Input
-                    id="password"
+                    id="login-password"
                     type="password"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
                     autoComplete="current-password"
                   />
-                </div>
+                </FormField>
 
                 {error && (
                   <p className="text-sm text-rose-600" aria-live="polite">

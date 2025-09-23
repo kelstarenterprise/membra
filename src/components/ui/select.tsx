@@ -37,7 +37,43 @@ function SelectTrigger({
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        "border-input data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground focus-visible:border-ring focus-visible:ring-ring/50 aria-invalid:ring-destructive/20 dark:aria-invalid:ring-destructive/40 aria-invalid:border-destructive dark:bg-input/30 dark:hover:bg-input/50 flex w-fit items-center justify-between gap-2 rounded-md border bg-transparent px-3 py-2 text-sm whitespace-nowrap shadow-xs transition-[color,box-shadow] outline-none focus-visible:ring-[3px] disabled:cursor-not-allowed disabled:opacity-50 data-[size=default]:h-9 data-[size=sm]:h-8 *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        // Base styles with improved spacing
+        "flex h-10 w-full items-center justify-between gap-2 rounded-lg border border-gray-300",
+        "bg-white px-4 py-2.5 text-sm whitespace-nowrap transition-all duration-200 ease-in-out",
+        
+        // Text and placeholder colors
+        "text-gray-900 data-[placeholder]:text-gray-400",
+        
+        // Focus states
+        "focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none",
+        
+        // Dark mode support
+        "dark:border-gray-600 dark:bg-gray-800 dark:text-white",
+        "dark:data-[placeholder]:text-gray-400 dark:focus:border-blue-400 dark:focus:ring-blue-400/20",
+        "dark:hover:bg-gray-700/50",
+        
+        // Error states
+        "aria-invalid:border-red-500 aria-invalid:ring-2 aria-invalid:ring-red-500/20",
+        "dark:aria-invalid:border-red-400 dark:aria-invalid:ring-red-400/20",
+        
+        // Disabled states
+        "disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-gray-50",
+        "dark:disabled:bg-gray-800/50",
+        
+        // Icon styles
+        "[&_svg:not([class*='text-'])]:text-gray-500 [&_svg]:pointer-events-none [&_svg]:shrink-0",
+        "[&_svg:not([class*='size-'])]:size-4",
+        
+        // Value display
+        "*:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex",
+        "*:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-2",
+        
+        // Shadow for depth
+        "shadow-sm hover:shadow-md transition-shadow",
+        
+        // Size variants
+        "data-[size=default]:h-10 data-[size=sm]:h-9",
+        
         className
       )}
       {...props}

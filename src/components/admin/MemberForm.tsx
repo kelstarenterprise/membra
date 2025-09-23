@@ -6,8 +6,9 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { FormField, FormRow } from "@/components/forms/FormField";
+import { FormSection, FormContainer, FormActions } from "@/components/forms/FormSection";
 import Image from "next/image";
 import {
   Select,
@@ -29,7 +30,7 @@ type LevelUnion = (typeof LEVELS)[number] | "";
 
 const EDU = [
   "PRIMARY",
-  "SECONDARY",
+  "SECONDARY", 
   "TERTIARY",
   "POSTGRADUATE",
   "VOCATIONAL",
@@ -104,7 +105,7 @@ const MemberSchema = z.object({
 
 export type MemberFormValues = z.infer<typeof MemberSchema>;
 
-export default function MemberForm({
+export default function MemberFormNew({
   initial,
   onSubmit,
   submitting,
@@ -235,356 +236,366 @@ export default function MemberForm({
   };
 
   return (
-    <form className="space-y-6" onSubmit={form.handleSubmit(onSubmit)}>
-      {/* Section 1: Member Information */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold border-b pb-2">
-          Member Information
-        </h3>
-
-        {/* Basic personal info */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label>
-              First Name <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              {...form.register("firstName")}
-              placeholder="Enter first name"
-            />
-            {form.formState.errors.firstName && (
-              <p className="text-xs text-red-600">
-                {form.formState.errors.firstName.message}
-              </p>
-            )}
-          </div>
-          <div>
-            <Label>
-              Last Name <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              {...form.register("lastName")}
-              placeholder="Enter last name"
-            />
-            {form.formState.errors.lastName && (
-              <p className="text-xs text-red-600">
-                {form.formState.errors.lastName.message}
-              </p>
-            )}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div>
-            <Label>
-              Date of Birth <span className="text-red-500">*</span>
-            </Label>
-            <Input type="date" {...form.register("dateOfBirth")} />
-            {form.formState.errors.dateOfBirth && (
-              <p className="text-xs text-red-600">
-                {form.formState.errors.dateOfBirth.message}
-              </p>
-            )}
-          </div>
-          <div>
-            <Label>
-              Gender <span className="text-red-500">*</span>
-            </Label>
-            <Select
-              value={form.watch("gender") ?? ""}
-              onValueChange={(v) => form.setValue("gender", toGender(v))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select gender" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="MALE">Male</SelectItem>
-                <SelectItem value="FEMALE">Female</SelectItem>
-                <SelectItem value="OTHER">Other</SelectItem>
-              </SelectContent>
-            </Select>
-            {form.formState.errors.gender && (
-              <p className="text-xs text-red-600">
-                {String(form.formState.errors.gender.message)}
-              </p>
-            )}
-          </div>
-          <div>
-            <Label>
-              Voter ID Number <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              {...form.register("nationalId")}
-              placeholder="Enter ID number"
-            />
-            {form.formState.errors.nationalId && (
-              <p className="text-xs text-red-600">
-                {form.formState.errors.nationalId.message}
-              </p>
-            )}
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label>
-              Phone Number <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              {...form.register("phone")}
-              placeholder="Enter phone number"
-            />
-            {form.formState.errors.phone && (
-              <p className="text-xs text-red-600">
-                {form.formState.errors.phone.message}
-              </p>
-            )}
-          </div>
-          <div>
-            <Label>Email Address</Label>
-            <Input
-              type="email"
-              {...form.register("email")}
-              placeholder="Enter email address"
-            />
-            {form.formState.errors.email && (
-              <p className="text-xs text-red-600">
-                {String(form.formState.errors.email.message)}
-              </p>
-            )}
-          </div>
-        </div>
-
-        <div>
-          <Label>
-            Residential Address <span className="text-red-500">*</span>
-          </Label>
-          <Textarea
-            rows={3}
-            {...form.register("residentialAddress")}
-            placeholder="Enter full residential address"
-          />
-          {form.formState.errors.residentialAddress && (
-            <p className="text-xs text-red-600">
-              {form.formState.errors.residentialAddress.message}
-            </p>
-          )}
-        </div>
-
-        <div>
-          <Label>
-            Region / Constituency / Electoral Area{" "}
-            <span className="text-red-500">*</span>
-          </Label>
-          <Input
-            {...form.register("regionConstituencyElectoralArea")}
-            placeholder="Enter region, constituency, or electoral area"
-          />
-          {form.formState.errors.regionConstituencyElectoralArea && (
-            <p className="text-xs text-red-600">
-              {form.formState.errors.regionConstituencyElectoralArea.message}
-            </p>
-          )}
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label>Occupation</Label>
-            <Input
-              {...form.register("occupation")}
-              placeholder="e.g., Teacher, Engineer"
-            />
-          </div>
-          <div>
-            <Label>Highest Education Level</Label>
-            <Select
-              value={form.watch("highestEducationLevel") ?? ""}
-              onValueChange={(v) =>
-                form.setValue("highestEducationLevel", toEdu(v))
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select education level" />
-              </SelectTrigger>
-              <SelectContent>
-                {EDU.map((v) => (
-                  <SelectItem key={v} value={v}>
-                    {v[0] + v.slice(1).toLowerCase()}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-
-      {/* Section 2: Membership Details */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold border-b pb-2">
-          Membership Details
-        </h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label>
-              Membership Level <span className="text-red-500">*</span>
-            </Label>
-            <Select
-              value={form.watch("membershipLevel") ?? ""}
-              onValueChange={(v) =>
-                form.setValue("membershipLevel", toLevel(v), {
-                  shouldValidate: true,
-                })
-              }
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select membership level" />
-              </SelectTrigger>
-              <SelectContent>
-                {LEVELS.map((v) => (
-                  <SelectItem key={v} value={v}>
-                    {v[0] + v.slice(1).toLowerCase()}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {form.formState.errors.membershipLevel && (
-              <p className="text-xs text-red-600">
-                {form.formState.errors.membershipLevel.message}
-              </p>
-            )}
-          </div>
-          <div>
-            <Label>Branch / Ward</Label>
-            <Input
-              {...form.register("branchWard")}
-              placeholder="Select or enter branch/ward"
-            />
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <Label>
-              Member Category <span className="text-red-500">*</span>
-            </Label>
-            <Select
-              value={form.watch("level")}
-              onValueChange={(v) => form.setValue("level", v)}
-              disabled={categoriesLoading || !!categoriesError}
-            >
-              <SelectTrigger>
-                <SelectValue
-                  placeholder={
-                    categoriesLoading
-                      ? "Loading categories..."
-                      : categoriesError
-                      ? "Error loading categories"
-                      : "Select category"
-                  }
-                />
-              </SelectTrigger>
-              <SelectContent>
-                {memberCategories.map((category) => (
-                  <SelectItem key={category.id} value={category.code}>
-                    {category.name}
-                  </SelectItem>
-                ))}
-                {!categoriesLoading &&
-                  memberCategories.length === 0 &&
-                  !categoriesError && (
-                    <SelectItem value="" disabled>
-                      No categories available
-                    </SelectItem>
-                  )}
-              </SelectContent>
-            </Select>
-            {categoriesError && (
-              <p className="text-xs text-red-600 mt-1">{categoriesError}</p>
-            )}
-            {form.formState.errors.level && (
-              <p className="text-xs text-red-600 mt-1">
-                {form.formState.errors.level.message}
-              </p>
-            )}
-          </div>
-          <div>
-            <Label>Status</Label>
-            <Select
-              value={form.watch("status") ?? ""}
-              onValueChange={(v) => form.setValue("status", toStatus(v))}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select status" />
-              </SelectTrigger>
-              <SelectContent>
-                {STATUSES.map((v) => (
-                  <SelectItem key={v} value={v}>
-                    {v[0] + v.slice(1).toLowerCase()}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div>
-          <Label>Recruited By</Label>
-          <Input
-            {...form.register("recruitedBy")}
-            placeholder="Name or member ID of recruiter (optional)"
-          />
-          <p className="text-xs text-muted-foreground mt-1">
-            Optional: Enter the name or member ID of the person who recruited
-            this member.
-          </p>
-        </div>
-      </div>
-
-      {/* Section 3: Attachments */}
-      <div className="space-y-4">
-        <h3 className="text-lg font-semibold border-b pb-2">Attachments</h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 items-end">
-          <div>
-            <Label>Passport Photo</Label>
-            <Input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              onChange={handleFileChange}
-            />
-            {form.formState.errors.passportPicture && (
-              <p className="text-xs text-red-600">
-                {String(form.formState.errors.passportPicture.message)}
-              </p>
-            )}
-            <p className="text-xs text-muted-foreground mt-1">
-              Upload member&apos;s passport photo (JPG/PNG/WebP, max 5MB)
-            </p>
-          </div>
-          {previewUrl && (
-            <div className="justify-self-start">
-              <Image
-                src={previewUrl}
-                alt="Passport preview"
-                width={96}
-                height={96}
-                className="rounded object-cover border shadow-sm"
-              />
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="pt-4">
-        <Button
-          type="submit"
-          disabled={submitting}
-          className="w-full md:w-auto px-8"
+    <FormContainer maxWidth="2xl">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        <FormSection 
+          title="Member Information"
+          subtitle="Basic personal and contact information"
         >
-          {submitting ? "Saving Member..." : "Save Member"}
-        </Button>
-      </div>
-    </form>
+          <FormRow columns={2}>
+            <FormField
+              label="First Name"
+              required
+              error={form.formState.errors.firstName?.message}
+              id="firstName"
+            >
+              <Input
+                id="firstName"
+                {...form.register("firstName")}
+                placeholder="Enter first name"
+                aria-invalid={!!form.formState.errors.firstName}
+              />
+            </FormField>
+            
+            <FormField
+              label="Last Name"
+              required
+              error={form.formState.errors.lastName?.message}
+              id="lastName"
+            >
+              <Input
+                id="lastName"
+                {...form.register("lastName")}
+                placeholder="Enter last name"
+                aria-invalid={!!form.formState.errors.lastName}
+              />
+            </FormField>
+          </FormRow>
+
+          <FormRow columns={3}>
+            <FormField
+              label="Date of Birth"
+              required
+              error={form.formState.errors.dateOfBirth?.message}
+              id="dateOfBirth"
+            >
+              <Input
+                id="dateOfBirth"
+                type="date"
+                {...form.register("dateOfBirth")}
+                aria-invalid={!!form.formState.errors.dateOfBirth}
+              />
+            </FormField>
+            
+            <FormField
+              label="Gender"
+              required
+              error={form.formState.errors.gender?.message as string}
+              id="gender"
+            >
+              <Select
+                value={form.watch("gender") ?? ""}
+                onValueChange={(v) => form.setValue("gender", toGender(v))}
+              >
+                <SelectTrigger id="gender" aria-invalid={!!form.formState.errors.gender}>
+                  <SelectValue placeholder="Select gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="MALE">Male</SelectItem>
+                  <SelectItem value="FEMALE">Female</SelectItem>
+                  <SelectItem value="OTHER">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </FormField>
+            
+            <FormField
+              label="Voter ID Number"
+              required
+              error={form.formState.errors.nationalId?.message}
+              id="nationalId"
+            >
+              <Input
+                id="nationalId"
+                {...form.register("nationalId")}
+                placeholder="Enter ID number"
+                aria-invalid={!!form.formState.errors.nationalId}
+              />
+            </FormField>
+          </FormRow>
+
+          <FormRow columns={2}>
+            <FormField
+              label="Phone Number"
+              required
+              error={form.formState.errors.phone?.message}
+              id="phone"
+            >
+              <Input
+                id="phone"
+                {...form.register("phone")}
+                placeholder="Enter phone number"
+                aria-invalid={!!form.formState.errors.phone}
+              />
+            </FormField>
+            
+            <FormField
+              label="Email Address"
+              error={form.formState.errors.email?.message as string}
+              id="email"
+            >
+              <Input
+                id="email"
+                type="email"
+                {...form.register("email")}
+                placeholder="Enter email address"
+                aria-invalid={!!form.formState.errors.email}
+              />
+            </FormField>
+          </FormRow>
+
+          <FormField
+            label="Residential Address"
+            required
+            error={form.formState.errors.residentialAddress?.message}
+            helpText="Enter the complete residential address"
+            id="residentialAddress"
+          >
+            <Textarea
+              id="residentialAddress"
+              rows={3}
+              {...form.register("residentialAddress")}
+              placeholder="Enter full residential address"
+              aria-invalid={!!form.formState.errors.residentialAddress}
+            />
+          </FormField>
+
+          <FormField
+            label="Region / Constituency / Electoral Area"
+            required
+            error={form.formState.errors.regionConstituencyElectoralArea?.message}
+            id="regionConstituencyElectoralArea"
+          >
+            <Input
+              id="regionConstituencyElectoralArea"
+              {...form.register("regionConstituencyElectoralArea")}
+              placeholder="Enter region, constituency, or electoral area"
+              aria-invalid={!!form.formState.errors.regionConstituencyElectoralArea}
+            />
+          </FormField>
+
+          <FormRow columns={2}>
+            <FormField
+              label="Occupation"
+              id="occupation"
+            >
+              <Input
+                id="occupation"
+                {...form.register("occupation")}
+                placeholder="e.g., Teacher, Engineer"
+              />
+            </FormField>
+            
+            <FormField
+              label="Highest Education Level"
+              id="highestEducationLevel"
+            >
+              <Select
+                value={form.watch("highestEducationLevel") ?? ""}
+                onValueChange={(v) =>
+                  form.setValue("highestEducationLevel", toEdu(v))
+                }
+              >
+                <SelectTrigger id="highestEducationLevel">
+                  <SelectValue placeholder="Select education level" />
+                </SelectTrigger>
+                <SelectContent>
+                  {EDU.map((v) => (
+                    <SelectItem key={v} value={v}>
+                      {v[0] + v.slice(1).toLowerCase()}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormField>
+          </FormRow>
+        </FormSection>
+
+        <FormSection 
+          title="Membership Details"
+          subtitle="Membership level and organizational information"
+        >
+          <FormRow columns={2}>
+            <FormField
+              label="Membership Level"
+              required
+              error={form.formState.errors.membershipLevel?.message}
+              id="membershipLevel"
+            >
+              <Select
+                value={form.watch("membershipLevel") ?? ""}
+                onValueChange={(v) =>
+                  form.setValue("membershipLevel", toLevel(v), {
+                    shouldValidate: true,
+                  })
+                }
+              >
+                <SelectTrigger id="membershipLevel" aria-invalid={!!form.formState.errors.membershipLevel}>
+                  <SelectValue placeholder="Select membership level" />
+                </SelectTrigger>
+                <SelectContent>
+                  {LEVELS.map((v) => (
+                    <SelectItem key={v} value={v}>
+                      {v[0] + v.slice(1).toLowerCase()}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormField>
+            
+            <FormField
+              label="Branch / Ward"
+              id="branchWard"
+            >
+              <Input
+                id="branchWard"
+                {...form.register("branchWard")}
+                placeholder="Select or enter branch/ward"
+              />
+            </FormField>
+          </FormRow>
+
+          <FormRow columns={2}>
+            <FormField
+              label="Member Category"
+              required
+              error={form.formState.errors.level?.message}
+              helpText={categoriesError || "Select the appropriate membership category"}
+              id="level"
+            >
+              <Select
+                value={form.watch("level")}
+                onValueChange={(v) => form.setValue("level", v)}
+                disabled={categoriesLoading || !!categoriesError}
+              >
+                <SelectTrigger id="level" aria-invalid={!!form.formState.errors.level}>
+                  <SelectValue
+                    placeholder={
+                      categoriesLoading
+                        ? "Loading categories..."
+                        : categoriesError
+                        ? "Error loading categories"
+                        : "Select category"
+                    }
+                  />
+                </SelectTrigger>
+                <SelectContent>
+                  {memberCategories.map((category) => (
+                    <SelectItem key={category.id} value={category.code}>
+                      {category.name}
+                    </SelectItem>
+                  ))}
+                  {!categoriesLoading &&
+                    memberCategories.length === 0 &&
+                    !categoriesError && (
+                      <SelectItem value="" disabled>
+                        No categories available
+                      </SelectItem>
+                    )}
+                </SelectContent>
+              </Select>
+            </FormField>
+            
+            <FormField
+              label="Status"
+              id="status"
+            >
+              <Select
+                value={form.watch("status") ?? ""}
+                onValueChange={(v) => form.setValue("status", toStatus(v))}
+              >
+                <SelectTrigger id="status">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUSES.map((v) => (
+                    <SelectItem key={v} value={v}>
+                      {v[0] + v.slice(1).toLowerCase()}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </FormField>
+          </FormRow>
+
+          <FormField
+            label="Recruited By"
+            helpText="Enter the name or member ID of the person who recruited this member (optional)"
+            id="recruitedBy"
+          >
+            <Input
+              id="recruitedBy"
+              {...form.register("recruitedBy")}
+              placeholder="Name or member ID of recruiter (optional)"
+            />
+          </FormField>
+        </FormSection>
+
+        <FormSection 
+          title="Attachments"
+          subtitle="Upload supporting documents and photos"
+        >
+          <FormRow columns={previewUrl ? 2 : 1}>
+            <FormField
+              label="Passport Photo"
+              error={form.formState.errors.passportPicture?.message as string}
+              helpText="Upload member's passport photo (JPG/PNG/WebP, max 5MB)"
+              id="passportPicture"
+            >
+              <Input
+                id="passportPicture"
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleFileChange}
+                aria-invalid={!!form.formState.errors.passportPicture}
+              />
+            </FormField>
+            
+            {previewUrl && (
+              <div className="flex justify-center">
+                <div className="relative">
+                  <Image
+                    src={previewUrl}
+                    alt="Passport preview"
+                    width={120}
+                    height={120}
+                    className="rounded-lg object-cover border-2 border-gray-200 shadow-sm"
+                  />
+                  <div className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                    Preview
+                  </div>
+                </div>
+              </div>
+            )}
+          </FormRow>
+        </FormSection>
+
+        <FormActions align="left">
+          <Button
+            type="submit"
+            disabled={submitting}
+            className="px-8"
+          >
+            {submitting ? "Saving Member..." : "Save Member"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => form.reset()}
+          >
+            Reset Form
+          </Button>
+        </FormActions>
+      </form>
+    </FormContainer>
   );
 }
