@@ -17,6 +17,19 @@ import LoadingSpinner from "@/components/shared/LoadingSpinner";
 export default function PlansPage() {
   const [rows, setRows] = useState<SubscriptionPlan[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Safe number coercion + "GHS 0.00" formatting
+  const toNumber = (v: unknown): number => {
+    if (typeof v === "number") return v;
+    if (typeof v === "string") {
+      const n = Number(v);
+      return Number.isFinite(n) ? n : 0;
+    }
+    return 0;
+  };
+
+  const formatGhs = (v: unknown) => `GHS ${toNumber(v).toFixed(2)}`;
+
   // form state
   const [form, setForm] = useState({
     name: "",
@@ -164,7 +177,7 @@ export default function PlansPage() {
                 <tr key={r.id} className="border-t">
                   <td className="p-3">{r.name}</td>
                   <td className="p-3">{r.code}</td>
-                  <td className="p-3 text-right">{r.amount.toFixed(2)}</td>
+                  <td className="p-3 text-right"> {formatGhs(r.amount)}</td>
                   <td className="p-3">{r.currency}</td>
                   <td className="p-3">{r.billingCycle}</td>
                   <td className="p-3">{r.active ? "Yes" : "No"}</td>
