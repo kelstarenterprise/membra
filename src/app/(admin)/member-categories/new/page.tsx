@@ -6,11 +6,13 @@ import MemberCategoryForm, {
   type MemberCategoryFormValues,
 } from "@/components/admin/MemberCategoryForm";
 import type { MemberCategoryErrorResponse } from "@/types/member-category";
+import { useToast } from "@/components/providers/toast-provider";
 
 export default function NewMemberCategoryPage() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
+  const { success, error: showError } = useToast();
 
   const handleSubmit = async (values: MemberCategoryFormValues) => {
     setSubmitting(true);
@@ -33,15 +35,26 @@ export default function NewMemberCategoryPage() {
       const json = await res.json() as MemberCategoryErrorResponse;
 
       if (!res.ok) {
-        setServerError(json.error || "Failed to create member category");
+        const errorMsg = json.error || "Failed to create member category";
+        setServerError(errorMsg);
+        showError("Category Creation Failed", errorMsg);
         return;
       }
 
-      router.push("/member-categories"); // adjust if your route differs
-      router.refresh();
+      success(
+        "Category Created Successfully",
+        `Member category "${values.name}" has been created.`
+      );
+
+      // Small delay to show success message before redirecting
+      setTimeout(() => {
+        router.push("/member-categories");
+        router.refresh();
+      }, 1500);
     } catch (e: unknown) {
       const errorMessage = e instanceof Error ? e.message : "Network error";
       setServerError(errorMessage);
+      showError("Category Creation Failed", errorMessage);
     } finally {
       setSubmitting(false);
     }

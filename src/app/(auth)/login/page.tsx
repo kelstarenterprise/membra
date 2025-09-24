@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/forms/FormField";
+import { useToast } from "@/components/providers/toast-provider";
 import Link from "next/link";
 
 function LoginForm() {
@@ -16,6 +17,7 @@ function LoginForm() {
   const [error, setError] = useState("");
   const router = useRouter();
   const sp = useSearchParams();
+  const { success, error: showError } = useToast();
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -31,13 +33,23 @@ function LoginForm() {
 
     setLoading(false);
 
-    if (!res) return;
+    if (!res) {
+      showError("Login Failed", "An unexpected error occurred. Please try again.");
+      return;
+    }
+    
     if (res.error) {
       setError("Invalid login credentials");
+      showError("Login Failed", "Invalid username/email or password. Please check your credentials and try again.");
       return;
     }
 
-    router.push(res.url || "/dashboard");
+    success("Login Successful", "Welcome back! Redirecting to your dashboard...");
+    
+    // Small delay to show the success message before redirecting
+    setTimeout(() => {
+      router.push(res.url || "/dashboard");
+    }, 1000);
   }
 
   return (

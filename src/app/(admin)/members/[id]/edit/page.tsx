@@ -5,6 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 
 import type { Member } from "@/types/member";
 import MemberForm, { MemberFormValues } from "@/components/admin/MemberForm";
+import { useToast } from "@/components/providers/toast-provider";
 
 export default function EditMemberPage() {
   const { id } = useParams<{ id: string }>();
@@ -12,6 +13,8 @@ export default function EditMemberPage() {
 
   const [initial, setInitial] = useState<Member | null>(null);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const { success, error: showError } = useToast();
 
   const apiGetOne = useCallback(async (): Promise<Member> => {
     const res = await fetch(`/api/members/${id}`, { cache: "no-store" });
@@ -60,10 +63,29 @@ export default function EditMemberPage() {
 
       <MemberForm
         initial={initial}
-        submitting={false}
+        submitting={submitting}
         onSubmit={async (values) => {
-          await apiUpdate(values);
-          router.push("/admin/members"); // back to list
+          try {
+            setSubmitting(true);
+            const updatedMember = await apiUpdate(values);
+            success(
+              "Member Updated Successfully",
+              `${updatedMember.firstName} ${updatedMember.lastName}'s details have been updated.`
+            );
+            
+            // Small delay to show success message before redirecting
+            setTimeout(() => {
+              router.push("/members");
+            }, 1500);
+          } catch (error) {
+            console.error("Error updating member:", error);
+            showError(
+              "Failed to Update Member",
+              error instanceof Error ? error.message : "An unexpected error occurred. Please try again."
+            );
+          } finally {
+            setSubmitting(false);
+          }
         }}
       />
     </div>
