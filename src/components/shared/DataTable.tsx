@@ -31,13 +31,13 @@ export default function DataTable<T extends { id: string }>({
     <div className="w-full">
       <div className="overflow-x-auto">
         <table className="min-w-full text-sm">
-          <thead className="bg-gray-50 text-gray-600">
+          <thead className="bg-blue-50/80 text-blue-900 border-b border-blue-100">
             <tr>
               {columns.map((c, i) => (
                 <th
                   key={i}
                   className={clsx(
-                    "px-3 py-2 text-left font-medium",
+                    "px-4 py-3 text-left font-semibold text-sm border-r border-blue-100 last:border-r-0",
                     c.className
                   )}
                 >
@@ -48,7 +48,7 @@ export default function DataTable<T extends { id: string }>({
           </thead>
           <tbody className="divide-y">
             {rows.map((r, ri) => (
-              <tr key={r.id} className="bg-white hover:bg-gray-50">
+              <tr key={r.id} className="bg-white hover:bg-blue-50">
                 {columns.map((c, ci) => (
                   <td key={ci} className={clsx("px-3 py-2", c.className)}>
                     {c.render ? c.render(r, ri) : String(r[c.key as keyof T] ?? '')}
@@ -59,7 +59,7 @@ export default function DataTable<T extends { id: string }>({
           </tbody>
         </table>
       </div>
-      <div className="flex items-center justify-between p-3 text-xs text-gray-600">
+      <div className="flex items-center justify-between p-3 text-xs text-blue-700">
         <div>
           Page {page} · Showing {rows.length} of {total}
         </div>

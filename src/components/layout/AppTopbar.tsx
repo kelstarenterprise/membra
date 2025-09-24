@@ -16,7 +16,7 @@ export default function AppTopbar({
 }) {
   const isAuthed = role !== "GUEST";
   return (
-    <header className="h-14 bg-white border-b sticky top-0 z-40">
+    <header className="h-14 bg-gradient-to-r from-blue-800 via-blue-700 to-blue-800 border-b border-blue-600 sticky top-0 z-40 shadow-sm backdrop-blur-sm">
       <div className="max-w-7xl mx-auto h-full px-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Button
@@ -24,20 +24,21 @@ export default function AppTopbar({
             size="icon"
             onClick={onMenu}
             aria-label="Open menu"
-            className="md:hidden"
+            className="md:hidden text-white hover:bg-blue-600/50"
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <span className="font-semibold">MembershipManager</span>
+          <span className="font-semibold text-white">MembershipManager</span>
         </div>
-        <div className="flex items-center gap-2 text-sm text-gray-600">
-          <UserCircle className="h-5 w-5" />{" "}
+        <div className="flex items-center gap-2 text-sm text-blue-100">
+          <UserCircle className="h-5 w-5 text-blue-200" />{" "}
           {name ?? (isAuthed ? "User" : "Guest")}
           {isAuthed && (
             <Button
               variant="outline"
               size="sm"
               onClick={() => signOut({ callbackUrl: "/login" })}
+              className="border-blue-300 text-blue-100 hover:bg-blue-600/50 hover:text-white hover:border-blue-200"
             >
               <LogOut className="h-4 w-4 mr-1" /> Logout
             </Button>

@@ -84,7 +84,7 @@ export default function MembersTable() {
       </div>
 
       <div className="flex items-center gap-2">
-        <Label htmlFor="search" className="text-sm text-gray-600">
+        <Label htmlFor="search" className="text-sm text-blue-700">
           Search
         </Label>
         <Input
@@ -100,15 +100,15 @@ export default function MembersTable() {
 
       <div className="overflow-x-auto border rounded-xl bg-white">
         <table className="min-w-full text-sm">
-          <thead className="bg-gray-50 text-gray-600">
+          <thead className="bg-blue-50/80 text-blue-900 border-b border-blue-100">
             <tr>
-              <th className="px-3 py-2 text-left font-medium">Name</th>
-              <th className="px-3 py-2 text-left font-medium">Email</th>
-              <th className="px-3 py-2 text-left font-medium">Phone</th>
-              <th className="px-3 py-2 text-left font-medium">Level</th>
-              <th className="px-3 py-2 text-left font-medium">Status</th>
-              <th className="px-3 py-2 text-right font-medium">Outstanding</th>
-              <th className="px-3 py-2 text-right font-medium w-40">Actions</th>
+              <th className="px-4 py-3 text-left font-semibold text-sm border-r border-blue-100 last:border-r-0">Name</th>
+              <th className="px-4 py-3 text-left font-semibold text-sm border-r border-blue-100 last:border-r-0">Email</th>
+              <th className="px-4 py-3 text-left font-semibold text-sm border-r border-blue-100 last:border-r-0">Phone</th>
+              <th className="px-4 py-3 text-left font-semibold text-sm border-r border-blue-100 last:border-r-0">Level</th>
+              <th className="px-4 py-3 text-left font-semibold text-sm border-r border-blue-100 last:border-r-0">Status</th>
+              <th className="px-4 py-3 text-right font-semibold text-sm border-r border-blue-100 last:border-r-0">Outstanding</th>
+              <th className="px-4 py-3 text-right font-semibold text-sm w-40">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -126,7 +126,7 @@ export default function MembersTable() {
               </tr>
             ) : (
               filtered.map((m) => (
-                <tr key={m.id} className="bg-white hover:bg-gray-50">
+                <tr key={m.id} className="bg-white hover:bg-blue-50">
                   <td className="px-3 py-2">
                     {m.firstName} {m.lastName}
                   </td>
@@ -134,7 +134,7 @@ export default function MembersTable() {
                   <td className="px-3 py-2">{m.phone ?? "—"}</td>
                   <td className="px-3 py-2">{m.level ?? "—"}</td>
                   <td className="px-3 py-2">
-                    <span className="inline-flex items-center rounded-full bg-gray-100 px-2 py-0.5 text-xs">
+                    <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-800">
                       {m.status}
                     </span>
                   </td>

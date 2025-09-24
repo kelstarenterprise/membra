@@ -11,7 +11,7 @@ const bannerVariants = cva(
     variants: {
       variant: {
         default: 
-          "bg-gray-50 border-l-gray-400 text-gray-800 dark:bg-gray-800/50 dark:border-l-gray-500 dark:text-gray-200",
+          "bg-blue-50 border-l-blue-400 text-blue-800 dark:bg-blue-900/20 dark:border-l-blue-400 dark:text-blue-200",
         success:
           "bg-green-50 border-l-green-400 text-green-800 dark:bg-green-900/20 dark:border-l-green-400 dark:text-green-200",
         destructive:
@@ -51,7 +51,7 @@ const BannerIcon: React.FC<{ variant?: string; className?: string }> = ({
     case "info":
       return <Info className={cn(iconClassName, "text-blue-600 dark:text-blue-400")} />;
     default:
-      return <Info className={cn(iconClassName, "text-gray-600 dark:text-gray-400")} />;
+      return <Info className={cn(iconClassName, "text-blue-600 dark:text-blue-400")} />;
   }
 };
 

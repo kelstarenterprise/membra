@@ -40,8 +40,8 @@ function NavItem({
   return (
     <Link
       href={href}
-      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm hover:bg-gray-100 ${
-        active ? "bg-gray-100 font-medium" : "text-gray-700"
+      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-blue-50 ${
+        active ? "bg-blue-100 text-blue-900 font-medium shadow-sm border-l-2 border-blue-600" : "text-blue-700 hover:text-blue-900"
       }`}
     >
       <Icon className="h-4 w-4" /> {label}
@@ -53,7 +53,7 @@ function SidebarNav({ role }: { role: AppRole }) {
   if (role === "ADMIN") {
     return (
       <>
-        <div className="text-xs uppercase text-gray-500 px-3 mb-2">Admin</div>
+        <div className="text-xs uppercase text-blue-600 px-3 mb-2 font-semibold">Admin</div>
         <nav className="space-y-1">
           <NavItem href="/dashboard" label="Dashboard" Icon={LayoutDashboard} />
           <NavItem href="/members" label="Members" Icon={Users} />
@@ -81,7 +81,7 @@ function SidebarNav({ role }: { role: AppRole }) {
   if (role === "MEMBER") {
     return (
       <>
-        <div className="text-xs uppercase text-gray-500 px-3 mb-2">Member</div>
+        <div className="text-xs uppercase text-blue-600 px-3 mb-2 font-semibold">Member</div>
         <nav className="space-y-1">
           <NavItem href="/dashboard" label="Dashboard" Icon={LayoutDashboard} />
           <NavItem href="/statement" label="My Statement" Icon={PiggyBank} />
@@ -97,7 +97,7 @@ function SidebarNav({ role }: { role: AppRole }) {
   }
   return (
     <>
-      <div className="text-xs uppercase text-gray-500 px-3 mb-2">Guest</div>
+      <div className="text-xs uppercase text-blue-600 px-3 mb-2 font-semibold">Guest</div>
       <nav className="space-y-1">
         <NavItem href="/login" label="Login" Icon={LogIn} />
       </nav>
@@ -117,7 +117,7 @@ export default function AppSidebar({
   return (
     <>
       {/* Desktop rail */}
-      <aside className="hidden md:block w-64 shrink-0 border-r bg-white h-[calc(100dvh-3.5rem)] overflow-y-auto">
+      <aside className="hidden md:block w-64 shrink-0 border-r border-blue-200 bg-blue-50/30 h-[calc(100dvh-3.5rem)] overflow-y-auto">
         <div className="p-3">
           <SidebarNav role={role} />
         </div>

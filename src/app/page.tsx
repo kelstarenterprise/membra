@@ -22,7 +22,7 @@ const ORG = {
   NAME: "Unity Party",
   SHORT: "UP",
   TAGLINE: "Service • Integrity • Progress",
-  PRIMARY: "indigo", // Tailwind color family used throughout
+  PRIMARY: "blue", // Tailwind color family used throughout
 };
 
 /** Utility to swap primary color classes */
@@ -44,11 +44,7 @@ export default function Home() {
     | undefined;
 
   const dashboardHref =
-    role === "ADMIN"
-      ? "/dashboard"
-      : role === "MEMBER"
-      ? "/dashboard"
-      : "/dashboard";
+    role === "ADMIN" ? "/login" : role === "MEMBER" ? "/login" : "/login";
 
   if (status === "loading") {
     return (

@@ -16,8 +16,8 @@ export default function Guard({
     return (
       <div className="min-h-[60vh] flex items-center justify-center p-6">
         <div className="text-center">
-          <h2 className="text-xl font-semibold">Access denied</h2>
-          <p className="text-sm text-gray-600 mt-2">
+          <h2 className="text-xl font-semibold text-blue-900">Access denied</h2>
+          <p className="text-sm text-blue-600 mt-2">
             You don&apos;t have permission to view this page.
           </p>
         </div>

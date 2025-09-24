@@ -270,7 +270,7 @@ export default function MyStatementPage() {
                   </div>
                 ) : (
                   <table className="min-w-full text-sm">
-                    <thead className="bg-muted/50">
+                    <thead className="bg-blue-50/80 text-blue-900 border-b border-blue-100">
                       <tr>
                         <th className="text-left p-3">Period</th>
                         <th className="text-left p-3">Plan</th>
@@ -309,7 +309,7 @@ export default function MyStatementPage() {
                   </div>
                 ) : (
                   <table className="min-w-full text-sm">
-                    <thead className="bg-muted/50">
+                    <thead className="bg-blue-50/80 text-blue-900 border-b border-blue-100">
                       <tr>
                         <th className="text-left p-3">Date</th>
                         <th className="text-left p-3">Plan</th>

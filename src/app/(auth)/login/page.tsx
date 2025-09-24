@@ -131,7 +131,7 @@ function LoginForm() {
     <main className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-background">
       {/* Left / Hero panel (large screens) */}
       <section className="relative hidden lg:block">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-500" />
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800" />
         <div className="relative h-full w-full flex items-center justify-center p-12">
           <div className="max-w-md text-white">
             <h2 className="text-3xl font-bold leading-tight">

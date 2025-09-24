@@ -275,14 +275,14 @@ export default function UsersAdminPage() {
 
         <div className="overflow-x-auto border rounded-md">
           <table className="min-w-full text-sm">
-            <thead className="bg-muted/50">
+            <thead className="bg-blue-50/80 text-blue-900 border-b border-blue-100">
               <tr>
-                <th className="text-left p-2">Username</th>
-                <th className="text-left p-2">Email</th>
-                <th className="text-left p-2">Role</th>
-                <th className="text-left p-2">Linked Member</th>
-                <th className="text-left p-2">Created</th>
-                <th className="text-right p-2 w-36">Actions</th>
+                <th className="text-left px-4 py-3 font-semibold text-sm border-r border-blue-100 last:border-r-0">Username</th>
+                <th className="text-left px-4 py-3 font-semibold text-sm border-r border-blue-100 last:border-r-0">Email</th>
+                <th className="text-left px-4 py-3 font-semibold text-sm border-r border-blue-100 last:border-r-0">Role</th>
+                <th className="text-left px-4 py-3 font-semibold text-sm border-r border-blue-100 last:border-r-0">Linked Member</th>
+                <th className="text-left px-4 py-3 font-semibold text-sm border-r border-blue-100 last:border-r-0">Created</th>
+                <th className="text-right px-4 py-3 font-semibold text-sm w-36">Actions</th>
               </tr>
             </thead>
             <tbody>
