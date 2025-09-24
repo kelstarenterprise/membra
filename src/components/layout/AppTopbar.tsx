@@ -28,7 +28,7 @@ export default function AppTopbar({
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <span className="font-semibold text-white">MembershipManager</span>
+          <span className="font-semibold text-white">Membership Manager</span>
         </div>
         <div className="flex items-center gap-2 text-sm text-blue-100">
           <UserCircle className="h-5 w-5 text-blue-200" />{" "}
@@ -38,7 +38,7 @@ export default function AppTopbar({
               variant="outline"
               size="sm"
               onClick={() => signOut({ callbackUrl: "/login" })}
-              className="border-blue-300 text-blue-100 hover:bg-blue-600/50 hover:text-white hover:border-blue-200"
+              className="border-blue-600 text-blue-100 bg-blue-400/50 hover:bg-blue-600/50 hover:text-white hover:border-blue-200"
             >
               <LogOut className="h-4 w-4 mr-1" /> Logout
             </Button>
