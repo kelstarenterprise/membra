@@ -60,7 +60,7 @@ function SidebarNav({ role }: { role: AppRole }) {
           <NavItem href="/dues/plans" label="Dues Plans" Icon={Package} />
           <NavItem
             href="/dues/posting"
-            label="Access Dues"
+            label="Dues Assignment"
             Icon={WalletCards}
           />
           <NavItem

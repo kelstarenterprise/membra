@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 
 import type { Member } from "@/types/member";
 import MemberForm, { MemberFormValues } from "@/components/admin/MemberForm";
-import { useToast } from "@/components/providers/toast-provider";
+import { useBanner } from "@/components/providers/banner-provider";
 
 export default function EditMemberPage() {
   const { id } = useParams<{ id: string }>();
@@ -14,7 +14,7 @@ export default function EditMemberPage() {
   const [initial, setInitial] = useState<Member | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const { success, error: showError } = useToast();
+  const { success, error: showError } = useBanner();
 
   const apiGetOne = useCallback(async (): Promise<Member> => {
     const res = await fetch(`/api/members/${id}`, { cache: "no-store" });

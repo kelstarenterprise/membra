@@ -1,4 +1,5 @@
-import { toast } from "@/components/providers/toast-provider";
+// Note: This utility is now designed to work without direct banner context
+// Components should use useBanner() hook directly for better context management
 
 export interface ApiError {
   message: string;
@@ -18,12 +19,11 @@ export class ApiException extends Error {
 }
 
 /**
- * Generic API request handler with toast notifications
+ * Generic API request handler
  */
 export async function apiRequest<T = unknown>(
   url: string,
-  options: RequestInit = {},
-  showToasts: boolean = true
+  options: RequestInit = {}
 ): Promise<T> {
   try {
     const response = await fetch(url, {
@@ -38,15 +38,6 @@ export async function apiRequest<T = unknown>(
 
     if (!response.ok) {
       const errorMessage = data.error || data.message || `HTTP ${response.status}`;
-      
-      if (showToasts) {
-        toast({
-          title: "Request Failed",
-          description: errorMessage,
-          variant: "destructive",
-        });
-      }
-      
       throw new ApiException(errorMessage, response.status, data.code);
     }
 
@@ -57,185 +48,98 @@ export async function apiRequest<T = unknown>(
     }
 
     const errorMessage = error instanceof Error ? error.message : "Network error occurred";
-    
-    if (showToasts) {
-      toast({
-        title: "Network Error",
-        description: errorMessage,
-        variant: "destructive",
-      });
-    }
-    
     throw new ApiException(errorMessage, 0, "NETWORK_ERROR");
   }
 }
 
 /**
- * API CRUD operations with built-in toast notifications
+ * API CRUD operations
  */
 export const api = {
   /**
    * GET request
    */
-  async get<T>(url: string, showToasts: boolean = false): Promise<T> {
-    return apiRequest<T>(url, { method: "GET" }, showToasts);
+  async get<T>(url: string): Promise<T> {
+    return apiRequest<T>(url, { method: "GET" });
   },
 
   /**
-   * POST request with success toast
+   * POST request
    */
-  async post<T>(
-    url: string,
-    data: unknown,
-    successMessage?: string,
-    showToasts: boolean = true
-  ): Promise<T> {
-    const result = await apiRequest<T>(
-      url,
-      {
-        method: "POST",
-        body: JSON.stringify(data),
-      },
-      showToasts
-    );
-
-    if (showToasts && successMessage) {
-      toast({
-        title: "Success",
-        description: successMessage,
-        variant: "success",
-      });
-    }
-
-    return result;
+  async post<T>(url: string, data: unknown): Promise<T> {
+    return apiRequest<T>(url, {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
   },
 
   /**
-   * PUT request with success toast
+   * PUT request
    */
-  async put<T>(
-    url: string,
-    data: unknown,
-    successMessage?: string,
-    showToasts: boolean = true
-  ): Promise<T> {
-    const result = await apiRequest<T>(
-      url,
-      {
-        method: "PUT",
-        body: JSON.stringify(data),
-      },
-      showToasts
-    );
-
-    if (showToasts && successMessage) {
-      toast({
-        title: "Success",
-        description: successMessage,
-        variant: "success",
-      });
-    }
-
-    return result;
+  async put<T>(url: string, data: unknown): Promise<T> {
+    return apiRequest<T>(url, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
   },
 
   /**
-   * PATCH request with success toast
+   * PATCH request
    */
-  async patch<T>(
-    url: string,
-    data: unknown,
-    successMessage?: string,
-    showToasts: boolean = true
-  ): Promise<T> {
-    const result = await apiRequest<T>(
-      url,
-      {
-        method: "PATCH",
-        body: JSON.stringify(data),
-      },
-      showToasts
-    );
-
-    if (showToasts && successMessage) {
-      toast({
-        title: "Success",
-        description: successMessage,
-        variant: "success",
-      });
-    }
-
-    return result;
+  async patch<T>(url: string, data: unknown): Promise<T> {
+    return apiRequest<T>(url, {
+      method: "PATCH",
+      body: JSON.stringify(data),
+    });
   },
 
   /**
-   * DELETE request with success toast
+   * DELETE request
    */
-  async delete<T>(
-    url: string,
-    successMessage?: string,
-    showToasts: boolean = true
-  ): Promise<T> {
-    const result = await apiRequest<T>(
-      url,
-      { method: "DELETE" },
-      showToasts
-    );
-
-    if (showToasts && successMessage) {
-      toast({
-        title: "Success",
-        description: successMessage,
-        variant: "success",
-      });
-    }
-
-    return result;
+  async delete<T>(url: string): Promise<T> {
+    return apiRequest<T>(url, { method: "DELETE" });
   },
 };
 
 /**
- * Utility functions for common toast patterns
+ * Utility functions for common banner patterns
+ * Note: These return banner configuration objects.
+ * Use useBanner() hook in components for actual banner display.
  */
-export const toastUtils = {
-  success: (title: string, description?: string) => {
-    toast({
-      title,
-      description,
-      variant: "success",
-    });
-  },
+export const bannerUtils = {
+  success: (title: string, description?: string, duration?: number) => ({
+    variant: "success" as const,
+    title,
+    description,
+    duration: duration || 5000,
+  }),
 
-  error: (title: string, description?: string) => {
-    toast({
-      title,
-      description,
-      variant: "destructive",
-    });
-  },
+  error: (title: string, description?: string, duration?: number) => ({
+    variant: "destructive" as const,
+    title,
+    description,
+    duration: duration || 8000,
+  }),
 
-  warning: (title: string, description?: string) => {
-    toast({
-      title,
-      description,
-      variant: "warning",
-    });
-  },
+  warning: (title: string, description?: string, duration?: number) => ({
+    variant: "warning" as const,
+    title,
+    description,
+    duration: duration || 7000,
+  }),
 
-  info: (title: string, description?: string) => {
-    toast({
-      title,
-      description,
-      variant: "info",
-    });
-  },
+  info: (title: string, description?: string, duration?: number) => ({
+    variant: "info" as const,
+    title,
+    description,
+    duration: duration || 5000,
+  }),
 
-  loading: (title: string, description?: string) => {
-    return toast({
-      title,
-      description,
-      variant: "default",
-      duration: 0, // Don't auto-dismiss
-    });
-  },
+  loading: (title: string, description?: string) => ({
+    variant: "default" as const,
+    title,
+    description,
+    duration: 0, // Don't auto-dismiss
+    dismissible: false,
+  }),
 };

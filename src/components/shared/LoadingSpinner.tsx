@@ -1,1 +1,1 @@
-export default function Placeholder() { return <div>Coming soon...</div>; }
+export default function Placeholder() { return <div>Loading data please wait</div>; }

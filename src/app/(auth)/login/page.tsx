@@ -7,17 +7,17 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { FormField } from "@/components/forms/FormField";
-import { useToast } from "@/components/providers/toast-provider";
+import { FormWithBanner, useFormBannerActions } from "@/components/forms/FormBanner";
 import Link from "next/link";
 
-function LoginForm() {
+function LoginFormInner() {
   const [id, setId] = useState(""); // email or username
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
   const sp = useSearchParams();
-  const { success, error: showError } = useToast();
+  const { success, error: showError } = useFormBannerActions();
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -53,31 +53,7 @@ function LoginForm() {
   }
 
   return (
-    <main className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-background">
-      {/* Left / Hero panel (large screens) */}
-      <section className="relative hidden lg:block">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-500" />
-        <div className="relative h-full w-full flex items-center justify-center p-12">
-          <div className="max-w-md text-white">
-            <h2 className="text-3xl font-bold leading-tight">
-              Welcome to MEMBRA
-            </h2>
-            <p className="mt-4 text-white/90">Sign in or Create and Account</p>
-          </div>
-        </div>
-      </section>
-
-      {/* Right / Form panel */}
-      <section className="flex items-center justify-center px-4 sm:px-6 lg:px-8 py-10">
-        <div className="w-full max-w-sm sm:max-w-md md:max-w-lg">
-          <Card className="rounded-xl border shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-center text-2xl font-semibold">
-                Sign in
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-6">
-              <form onSubmit={onSubmit} className="space-y-6">
+    <form onSubmit={onSubmit} className="space-y-6">
                 <FormField
                   label="Email or Username"
                   required
@@ -145,8 +121,40 @@ function LoginForm() {
                       Create one
                     </Link>
                   </p>
-                </div>
-              </form>
+      </div>
+    </form>
+  );
+}
+
+function LoginForm() {
+  return (
+    <main className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-background">
+      {/* Left / Hero panel (large screens) */}
+      <section className="relative hidden lg:block">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-600 via-blue-600 to-cyan-500" />
+        <div className="relative h-full w-full flex items-center justify-center p-12">
+          <div className="max-w-md text-white">
+            <h2 className="text-3xl font-bold leading-tight">
+              Welcome to MEMBRA
+            </h2>
+            <p className="mt-4 text-white/90">Sign in or Create and Account</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Right / Form panel */}
+      <section className="flex items-center justify-center px-4 sm:px-6 lg:px-8 py-10">
+        <div className="w-full max-w-sm sm:max-w-md md:max-w-lg">
+          <Card className="rounded-xl border shadow-sm">
+            <CardHeader>
+              <CardTitle className="text-center text-2xl font-semibold">
+                Sign in
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="pt-6">
+              <FormWithBanner>
+                <LoginFormInner />
+              </FormWithBanner>
             </CardContent>
           </Card>
 

@@ -6,13 +6,13 @@ import MemberCategoryForm, {
   type MemberCategoryFormValues,
 } from "@/components/admin/MemberCategoryForm";
 import type { MemberCategoryErrorResponse } from "@/types/member-category";
-import { useToast } from "@/components/providers/toast-provider";
+import { FormWithBanner, useFormBannerActions } from "@/components/forms/FormBanner";
 
-export default function NewMemberCategoryPage() {
+function MemberCategoryFormWithActions() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
-  const { success, error: showError } = useToast();
+  const { success, error: showError } = useFormBannerActions();
 
   const handleSubmit = async (values: MemberCategoryFormValues) => {
     setSubmitting(true);
@@ -61,6 +61,16 @@ export default function NewMemberCategoryPage() {
   };
 
   return (
+    <MemberCategoryForm
+      onSubmit={handleSubmit}
+      submitting={submitting}
+      serverError={serverError}
+    />
+  );
+}
+
+export default function NewMemberCategoryPage() {
+  return (
     <div className="max-w-2xl mx-auto py-8">
       <h1 className="text-2xl font-semibold mb-1">Create Member Category</h1>
       <p className="text-sm text-muted-foreground mb-6">
@@ -69,11 +79,9 @@ export default function NewMemberCategoryPage() {
         dues plans.
       </p>
 
-      <MemberCategoryForm
-        onSubmit={handleSubmit}
-        submitting={submitting}
-        serverError={serverError}
-      />
+      <FormWithBanner>
+        <MemberCategoryFormWithActions />
+      </FormWithBanner>
     </div>
   );
 }

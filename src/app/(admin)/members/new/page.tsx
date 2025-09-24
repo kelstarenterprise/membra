@@ -5,12 +5,12 @@ import { useRouter } from "next/navigation";
 
 import type { Member } from "@/types/member";
 import MemberForm, { MemberFormValues } from "@/components/admin/MemberForm";
-import { useToast } from "@/components/providers/toast-provider";
+import { FormWithBanner, useFormBannerActions } from "@/components/forms/FormBanner";
 
-export default function NewMemberPage() {
+function MemberFormWithActions() {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
-  const { success, error: showError } = useToast();
+  const { success, error: showError } = useFormBannerActions();
 
   async function apiCreate(values: MemberFormValues): Promise<Member> {
     const res = await fetch("/api/members", {
@@ -28,6 +28,37 @@ export default function NewMemberPage() {
   }
 
   return (
+    <MemberForm
+      submitting={submitting}
+      onSubmit={async (values) => {
+        try {
+          setSubmitting(true);
+          const member = await apiCreate(values);
+          success(
+            "Member Created Successfully", 
+            `${member.firstName} ${member.lastName} has been added to the system.`
+          );
+          
+          // Small delay to show success message before redirecting
+          setTimeout(() => {
+            router.push("/members");
+          }, 1500);
+        } catch (error) {
+          console.error("Error creating member:", error);
+          showError(
+            "Failed to Create Member",
+            error instanceof Error ? error.message : "An unexpected error occurred. Please try again."
+          );
+        } finally {
+          setSubmitting(false);
+        }
+      }}
+    />
+  );
+}
+
+export default function NewMemberPage() {
+  return (
     <div className="space-y-4">
       <div>
         <h1 className="text-xl font-semibold">New Member</h1>
@@ -36,32 +67,9 @@ export default function NewMemberPage() {
         </p>
       </div>
 
-      <MemberForm
-        submitting={submitting}
-        onSubmit={async (values) => {
-          try {
-            setSubmitting(true);
-            const member = await apiCreate(values);
-            success(
-              "Member Created Successfully", 
-              `${member.firstName} ${member.lastName} has been added to the system.`
-            );
-            
-            // Small delay to show success message before redirecting
-            setTimeout(() => {
-              router.push("/members");
-            }, 1500);
-          } catch (error) {
-            console.error("Error creating member:", error);
-            showError(
-              "Failed to Create Member",
-              error instanceof Error ? error.message : "An unexpected error occurred. Please try again."
-            );
-          } finally {
-            setSubmitting(false);
-          }
-        }}
-      />
+      <FormWithBanner>
+        <MemberFormWithActions />
+      </FormWithBanner>
     </div>
   );
 }
