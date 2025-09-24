@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
-  ArrowRight,
   Users,
   CreditCard,
   Calendar,
@@ -14,6 +13,7 @@ import {
   Bell,
   ShieldCheck,
   MapPin,
+  ArrowRight,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -37,7 +37,8 @@ function primary(cls: string) {
 export default function Home() {
   const { data: session, status } = useSession();
 
-  const role = (session?.user && (session.user as any).role) as
+  type UserWithRole = { role?: "ADMIN" | "MEMBER" };
+  const role = (session?.user && (session.user as UserWithRole).role) as
     | "ADMIN"
     | "MEMBER"
     | undefined;
@@ -60,7 +61,7 @@ export default function Home() {
   return (
     <div
       className={primary(
-        "min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-300 via-white to-white"
+        "min-h-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-indigo-50 via-white to-white"
       )}
     >
       <SiteNav isAuthed={!!session} dashboardHref={dashboardHref} />
@@ -176,6 +177,7 @@ function PublicLanding() {
               Join {ORG.SHORT}, update your details, pay dues securely, and stay
               informed about national and branch activities—all in one place.
             </p>
+
             <div className="mt-6 flex items-center gap-6 text-sm text-muted-foreground">
               <div className="flex items-center gap-2">
                 <ShieldCheck className="size-4" /> Verified Party Membership
@@ -278,12 +280,12 @@ function PublicLanding() {
       {/* CTA BAND */}
       <section
         className={primary(
-          "py-16 lg:py-20 border-t bg-gradient-to-br from-indigo-100 to-white"
+          "py-16 lg:py-20 border-t bg-gradient-to-br from-indigo-50 to-white"
         )}
       >
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
           <h3 className="text-2xl sm:text-3xl font-bold tracking-tight">
-            Be part of {ORG.NAME}'s progress
+            Be part of {ORG.NAME}&rsquo;s progress
           </h3>
           <p className="mt-2 text-muted-foreground">
             Join thousands of members building a stronger {ORG.SHORT}. It takes
@@ -367,7 +369,7 @@ function AuthedWelcome({
             </Link>
             <p className="text-xs text-muted-foreground">
               Not you?{" "}
-              <Link className="text-indigo-700 hover:underline" href="/login">
+              <Link className="text-emerald-700 hover:underline" href="/login">
                 Switch account
               </Link>
             </p>
@@ -463,6 +465,7 @@ function SiteFooter() {
           <Link href="#features" className="hover:underline">
             Features
           </Link>
+
           <Link href="#faq" className="hover:underline">
             FAQ
           </Link>
