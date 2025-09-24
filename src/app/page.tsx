@@ -45,14 +45,14 @@ export default function Home() {
 
   const dashboardHref =
     role === "ADMIN"
-      ? "/admin/dashboard"
+      ? "/dashboard"
       : role === "MEMBER"
-      ? "/member/dashboard"
+      ? "/dashboard"
       : "/dashboard";
 
   if (status === "loading") {
     return (
-      <div className="min-h-screen grid place-items-center bg-gradient-to-b from-slate-50 to-white">
+      <div className="min-h-screen grid place-items-center bg-gradient-to-b from-indigo-50 to-white">
         <div className="text-sm text-muted-foreground">Loading…</div>
       </div>
     );
@@ -369,7 +369,7 @@ function AuthedWelcome({
             </Link>
             <p className="text-xs text-muted-foreground">
               Not you?{" "}
-              <Link className="text-emerald-700 hover:underline" href="/login">
+              <Link className="text-indigo-700 hover:underline" href="/login">
                 Switch account
               </Link>
             </p>
