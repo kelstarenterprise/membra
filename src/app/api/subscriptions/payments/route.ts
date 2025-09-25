@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import { updateMemberOutstandingBalance } from "@/lib/updateOutstandingBalance";
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
     const memberId = searchParams.get("memberId");
     const planId = searchParams.get("planId");
+    const assignedDueId = searchParams.get("assignedDueId");
     const from = searchParams.get("from"); // YYYY-MM-DD
     const to = searchParams.get("to"); // YYYY-MM-DD
 
@@ -13,6 +15,7 @@ export async function GET(req: Request) {
     
     if (memberId) where.memberId = memberId;
     if (planId) where.planId = planId;
+    if (assignedDueId) where.assignedDueId = assignedDueId;
     
     if (from || to) {
       where.paidAt = {} as { gte?: Date; lte?: Date };
@@ -152,6 +155,15 @@ export async function POST(req: Request) {
         where: { id: assignedDueId },
         data: { status: 'PAID' },
       });
+    }
+
+    // Update member's outstanding balance
+    try {
+      await updateMemberOutstandingBalance(memberId);
+      console.log(`Updated outstanding balance for member ${memberId} after payment`);
+    } catch (balanceError) {
+      console.error('Failed to update outstanding balance, but payment was successful:', balanceError);
+      // Don't fail the payment creation if balance update fails
     }
 
     // Transform response

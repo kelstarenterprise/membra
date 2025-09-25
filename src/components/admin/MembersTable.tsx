@@ -29,10 +29,19 @@ export default function MembersTable() {
       const n = Number(v);
       return Number.isFinite(n) ? n : 0;
     }
-    return 0;
+    // Handle Prisma Decimal objects
+    if (v && typeof v === 'object' && 'toNumber' in v) {
+      return (v as { toNumber(): number }).toNumber();
+    }
+    // Try to convert to number as fallback
+    const n = Number(v);
+    return Number.isFinite(n) ? n : 0;
   };
 
-  const formatGhs = (v: unknown) => `GHS ${toNumber(v).toFixed(2)}`;
+  const formatGhs = (v: unknown) => {
+    const num = toNumber(v);
+    return `GHS ${num.toFixed(2)}`;
+  };
 
   async function apiList(
     page: number,
@@ -177,8 +186,31 @@ export default function MembersTable() {
                     </span>
                   </td>
                   <td className="px-3 py-2 text-right">
-                    {formatGhs(m.outstandingBalance)}
-                  </td>
+                    {(() => {
+                      const balance = toNumber(m.outstandingBalance);
+                      const formattedBalance = formatGhs(m.outstandingBalance);
+                      
+                      if (balance === 0) {
+                        return (
+                          <span className="text-green-700 font-medium">
+                            {formattedBalance}
+                          </span>
+                        );
+                      } else if (balance > 0 && balance <= 50) {
+                        return (
+                          <span className="text-orange-600 font-medium">
+                            {formattedBalance}
+                          </span>
+                        );
+                      } else {
+                        return (
+                          <span className="text-red-600 font-medium">
+                            {formattedBalance}
+                          </span>
+                        );
+                      }
+                    })()
+                  }</td>
                   <td className="px-3 py-2">
                     <div className="flex justify-end gap-2">
                       <Button

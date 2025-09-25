@@ -9,12 +9,21 @@ import { DueStatus } from "@prisma/client";
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const memberId = searchParams.get("memberId") || undefined;
-  const status = (searchParams.get("status") as DueStatus) || undefined;
+  const statusParam = searchParams.get("status");
+  
+  // Handle multiple status values separated by commas
+  let statusFilter = {};
+  if (statusParam) {
+    const statusArray = statusParam.split(',').map(s => s.trim() as DueStatus);
+    statusFilter = statusArray.length === 1 
+      ? { status: statusArray[0] }
+      : { status: { in: statusArray } };
+  }
 
   const data = await prisma.assignedDues.findMany({
     where: {
       ...(memberId ? { memberId } : {}),
-      ...(status ? { status } : {}),
+      ...statusFilter,
     },
     orderBy: [{ dueDate: "asc" }, { createdAt: "desc" }],
     include: { member: true, plan: true, memberCategory: true, payments: true },

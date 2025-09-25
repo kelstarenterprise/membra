@@ -17,7 +17,7 @@ export type SubscriptionPlan = {
   createdAt: string; // ISO
 };
 
-export const TARGET_TYPE = ["LEVEL", "INDIVIDUAL"] as const;
+export const TARGET_TYPE = ["CATEGORY", "INDIVIDUAL"] as const;
 export type TargetType = (typeof TARGET_TYPE)[number];
 
 export type DuesAssessment = {
@@ -26,7 +26,7 @@ export type DuesAssessment = {
   planName: string;
   period: string; // e.g., "2025-09" or "2025"
   targetType: TargetType;
-  targetLevel?: string | null; // when targetType = LEVEL
+  targetCategory?: string | null; // when targetType = CATEGORY
   memberIds?: string[]; // when targetType = INDIVIDUAL
   createdAt: string;
   createdBy: string;
