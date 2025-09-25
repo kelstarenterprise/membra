@@ -1,7 +1,6 @@
 "use client";
 
 import * as React from "react";
-import { Banner, type BannerProps } from "@/components/ui/banner";
 
 type BannerVariant = "default" | "success" | "destructive" | "warning" | "info";
 
@@ -38,26 +37,29 @@ function generateBannerId(): string {
 export function BannerProvider({ children }: { children: React.ReactNode }) {
   const [banners, setBanners] = React.useState<BannerData[]>([]);
 
-  const showBanner = React.useCallback((bannerData: Omit<BannerData, "id">): string => {
-    const id = generateBannerId();
-    const banner: BannerData = {
-      id,
-      duration: 5000, // Default 5 seconds
-      dismissible: true,
-      ...bannerData,
-    };
+  const showBanner = React.useCallback(
+    (bannerData: Omit<BannerData, "id">): string => {
+      const id = generateBannerId();
+      const banner: BannerData = {
+        id,
+        duration: 5000, // Default 5 seconds
+        dismissible: true,
+        ...bannerData,
+      };
 
-    setBanners((prev) => [...prev, banner]);
+      setBanners((prev) => [...prev, banner]);
 
-    // Auto-dismiss if duration is specified
-    if (banner.duration && banner.duration > 0) {
-      setTimeout(() => {
-        setBanners((prev) => prev.filter((b) => b.id !== id));
-      }, banner.duration);
-    }
+      // Auto-dismiss if duration is specified
+      if (banner.duration && banner.duration > 0) {
+        setTimeout(() => {
+          setBanners((prev) => prev.filter((b) => b.id !== id));
+        }, banner.duration);
+      }
 
-    return id;
-  }, []);
+      return id;
+    },
+    []
+  );
 
   const dismissBanner = React.useCallback((id: string) => {
     setBanners((prev) => prev.filter((banner) => banner.id !== id));
@@ -126,13 +128,20 @@ export function BannerProvider({ children }: { children: React.ReactNode }) {
       warning,
       info,
     }),
-    [banners, showBanner, dismissBanner, clearAllBanners, success, error, warning, info]
+    [
+      banners,
+      showBanner,
+      dismissBanner,
+      clearAllBanners,
+      success,
+      error,
+      warning,
+      info,
+    ]
   );
 
   return (
-    <BannerContext.Provider value={value}>
-      {children}
-    </BannerContext.Provider>
+    <BannerContext.Provider value={value}>{children}</BannerContext.Provider>
   );
 }
 
@@ -140,11 +149,11 @@ export function BannerProvider({ children }: { children: React.ReactNode }) {
 
 export function useBanner(): BannerContextType {
   const context = React.useContext(BannerContext);
-  
+
   if (!context) {
     throw new Error("useBanner must be used within a BannerProvider");
   }
-  
+
   return context;
 }
 

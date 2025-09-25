@@ -136,8 +136,8 @@ export async function GET(req: Request) {
     const category = (searchParams.get("category") || "").trim(); // code or id
     const page = Math.max(1, Number(searchParams.get("page") || "1"));
     const size = Math.min(
-      100,
-      Math.max(1, Number(searchParams.get("size") || "20"))
+      50,
+      Math.max(1, Number(searchParams.get("size") || "10"))
     );
     const skip = (page - 1) * size;
 
@@ -202,11 +202,11 @@ export async function GET(req: Request) {
     } as MembersListResponse);
   } catch (error) {
     console.error("Error fetching members:", error);
-    const errorMessage = error instanceof Error ? error.message : "Failed to fetch members";
-    return NextResponse.json(
-      { error: errorMessage } as ApiErrorResponse,
-      { status: 500 }
-    );
+    const errorMessage =
+      error instanceof Error ? error.message : "Failed to fetch members";
+    return NextResponse.json({ error: errorMessage } as ApiErrorResponse, {
+      status: 500,
+    });
   }
 }
 
@@ -259,7 +259,9 @@ export async function POST(req: Request) {
       });
       if (!exists) {
         return NextResponse.json(
-          { error: `memberCategoryId not found: ${memberCategoryId}` } as ApiErrorResponse,
+          {
+            error: `memberCategoryId not found: ${memberCategoryId}`,
+          } as ApiErrorResponse,
           { status: 400 }
         );
       }
@@ -318,7 +320,9 @@ export async function POST(req: Request) {
       membershipId,
     }).catch(console.error);
 
-    return NextResponse.json({ data: created } as MemberResponse, { status: 201 });
+    return NextResponse.json({ data: created } as MemberResponse, {
+      status: 201,
+    });
   } catch (error: unknown) {
     console.error("Error creating member:", error);
 
@@ -336,10 +340,10 @@ export async function POST(req: Request) {
       );
     }
 
-    const errorMessage = error instanceof Error ? error.message : "Failed to create member";
-    return NextResponse.json(
-      { error: errorMessage } as ApiErrorResponse,
-      { status: 500 }
-    );
+    const errorMessage =
+      error instanceof Error ? error.message : "Failed to create member";
+    return NextResponse.json({ error: errorMessage } as ApiErrorResponse, {
+      status: 500,
+    });
   }
 }

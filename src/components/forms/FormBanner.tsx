@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Banner, type BannerProps } from "@/components/ui/banner";
+import { Banner } from "@/components/ui/banner";
 import { cn } from "@/lib/utils";
 
 export interface FormBannerData {
@@ -25,7 +25,9 @@ interface FormBannerContextType {
   info: (title: string, description?: string, duration?: number) => string;
 }
 
-const FormBannerContext = React.createContext<FormBannerContextType | null>(null);
+const FormBannerContext = React.createContext<FormBannerContextType | null>(
+  null
+);
 
 let formBannerIdCounter = 0;
 
@@ -35,29 +37,36 @@ function generateFormBannerId(): string {
 }
 
 // Form Banner Provider - to be used within individual forms
-export function FormBannerProvider({ children }: { children: React.ReactNode }) {
+export function FormBannerProvider({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [banners, setBanners] = React.useState<FormBannerData[]>([]);
 
-  const showBanner = React.useCallback((bannerData: Omit<FormBannerData, "id">): string => {
-    const id = generateFormBannerId();
-    const banner: FormBannerData = {
-      id,
-      duration: 5000, // Default 5 seconds
-      dismissible: true,
-      ...bannerData,
-    };
+  const showBanner = React.useCallback(
+    (bannerData: Omit<FormBannerData, "id">): string => {
+      const id = generateFormBannerId();
+      const banner: FormBannerData = {
+        id,
+        duration: 5000, // Default 5 seconds
+        dismissible: true,
+        ...bannerData,
+      };
 
-    setBanners((prev) => [banner, ...prev].slice(0, 3)); // Limit to 3 banners per form
+      setBanners((prev) => [banner, ...prev].slice(0, 3)); // Limit to 3 banners per form
 
-    // Auto-dismiss if duration is specified
-    if (banner.duration && banner.duration > 0) {
-      setTimeout(() => {
-        setBanners((prev) => prev.filter((b) => b.id !== id));
-      }, banner.duration);
-    }
+      // Auto-dismiss if duration is specified
+      if (banner.duration && banner.duration > 0) {
+        setTimeout(() => {
+          setBanners((prev) => prev.filter((b) => b.id !== id));
+        }, banner.duration);
+      }
 
-    return id;
-  }, []);
+      return id;
+    },
+    []
+  );
 
   const dismissBanner = React.useCallback((id: string) => {
     setBanners((prev) => prev.filter((banner) => banner.id !== id));
@@ -126,7 +135,16 @@ export function FormBannerProvider({ children }: { children: React.ReactNode }) 
       warning,
       info,
     }),
-    [banners, showBanner, dismissBanner, clearAllBanners, success, error, warning, info]
+    [
+      banners,
+      showBanner,
+      dismissBanner,
+      clearAllBanners,
+      success,
+      error,
+      warning,
+      info,
+    ]
   );
 
   return (
@@ -139,11 +157,11 @@ export function FormBannerProvider({ children }: { children: React.ReactNode }) 
 // Hook to use form banner context
 export function useFormBanner(): FormBannerContextType {
   const context = React.useContext(FormBannerContext);
-  
+
   if (!context) {
     throw new Error("useFormBanner must be used within a FormBannerProvider");
   }
-  
+
   return context;
 }
 
@@ -195,8 +213,9 @@ export function FormWithBanner({ children, className }: FormWithBannerProps) {
 
 // Simplified hook for components that just need to show banners
 export function useFormBannerActions() {
-  const { success, error, warning, info, showBanner, clearAllBanners } = useFormBanner();
-  
+  const { success, error, warning, info, showBanner, clearAllBanners } =
+    useFormBanner();
+
   return {
     success,
     error,

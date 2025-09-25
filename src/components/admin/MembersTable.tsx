@@ -1,19 +1,26 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { Member } from "@/types/member";
+import Pagination from "@/components/ui/pagination";
+import type { MembersListResponse, MemberWithCategory } from "@/types/members";
 
 export default function MembersTable() {
   const router = useRouter();
 
-  const [rows, setRows] = useState<Member[]>([]);
+  const [rows, setRows] = useState<MemberWithCategory[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
 
   // Safe number coercion + "GHS 0.00" formatting
   const toNumber = (v: unknown): number => {
@@ -27,14 +34,26 @@ export default function MembersTable() {
 
   const formatGhs = (v: unknown) => `GHS ${toNumber(v).toFixed(2)}`;
 
-  async function apiList(): Promise<Member[]> {
-    const res = await fetch("/api/members", {
+  async function apiList(
+    page: number,
+    size: number,
+    searchQuery?: string
+  ): Promise<MembersListResponse> {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      size: size.toString(),
+    });
+
+    if (searchQuery?.trim()) {
+      params.set("q", searchQuery.trim());
+    }
+
+    const res = await fetch(`/api/members?${params.toString()}`, {
       cache: "no-store",
       headers: { Accept: "application/json" },
     });
     if (!res.ok) throw new Error(`GET /api/members ${res.status}`);
-    const json = (await res.json()) as { data: Member[] };
-    return json.data;
+    return (await res.json()) as MembersListResponse;
   }
   async function apiDelete(id: string) {
     const res = await fetch(`/api/members/${id}`, {
@@ -48,33 +67,38 @@ export default function MembersTable() {
     try {
       setErr(null);
       setLoading(true);
-      const data = await apiList();
-      setRows(data);
+      const response = await apiList(currentPage, pageSize, search);
+      setRows(response.data);
+      setTotalItems(response.paging.total);
+      setTotalPages(response.paging.pages);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Failed to load members");
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [currentPage, pageSize, search]);
 
   useEffect(() => {
     load();
   }, [load]);
 
-  const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((r) =>
-      [
-        r.firstName,
-        r.lastName,
-        r.email,
-        r.phone ?? "",
-        r.status,
-        r.level ?? "",
-      ].some((f) => f?.toLowerCase().includes(q))
-    );
-  }, [rows, search]);
+  // Handle pagination changes
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  const handlePageSizeChange = (size: number) => {
+    setPageSize(size);
+    setCurrentPage(1); // Reset to first page when changing page size
+  };
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setCurrentPage(1); // Reset to first page when search changes
+  };
+
+  // Since we're using server-side pagination, we don't need client-side filtering
+  const filtered = rows;
 
   return (
     <div className="space-y-3">
@@ -92,7 +116,7 @@ export default function MembersTable() {
           placeholder="Name, email, status…"
           className="max-w-xs"
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => handleSearchChange(e.target.value)}
         />
       </div>
 
@@ -102,13 +126,27 @@ export default function MembersTable() {
         <table className="min-w-full text-sm">
           <thead className="bg-blue-50/80 text-blue-900 border-b border-blue-100">
             <tr>
-              <th className="px-4 py-3 text-left font-semibold text-sm border-r border-blue-100 last:border-r-0">Name</th>
-              <th className="px-4 py-3 text-left font-semibold text-sm border-r border-blue-100 last:border-r-0">Email</th>
-              <th className="px-4 py-3 text-left font-semibold text-sm border-r border-blue-100 last:border-r-0">Phone</th>
-              <th className="px-4 py-3 text-left font-semibold text-sm border-r border-blue-100 last:border-r-0">Level</th>
-              <th className="px-4 py-3 text-left font-semibold text-sm border-r border-blue-100 last:border-r-0">Status</th>
-              <th className="px-4 py-3 text-right font-semibold text-sm border-r border-blue-100 last:border-r-0">Outstanding</th>
-              <th className="px-4 py-3 text-right font-semibold text-sm w-40">Actions</th>
+              <th className="px-4 py-3 text-left font-semibold text-sm border-r border-blue-100 last:border-r-0">
+                Name
+              </th>
+              <th className="px-4 py-3 text-left font-semibold text-sm border-r border-blue-100 last:border-r-0">
+                Email
+              </th>
+              <th className="px-4 py-3 text-left font-semibold text-sm border-r border-blue-100 last:border-r-0">
+                Phone
+              </th>
+              <th className="px-4 py-3 text-left font-semibold text-sm border-r border-blue-100 last:border-r-0">
+                Level
+              </th>
+              <th className="px-4 py-3 text-left font-semibold text-sm border-r border-blue-100 last:border-r-0">
+                Status
+              </th>
+              <th className="px-4 py-3 text-right font-semibold text-sm border-r border-blue-100 last:border-r-0">
+                Outstanding
+              </th>
+              <th className="px-4 py-3 text-right font-semibold text-sm w-40">
+                Actions
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y">
@@ -132,7 +170,7 @@ export default function MembersTable() {
                   </td>
                   <td className="px-3 py-2">{m.email}</td>
                   <td className="px-3 py-2">{m.phone ?? "—"}</td>
-                  <td className="px-3 py-2">{m.level ?? "—"}</td>
+                  <td className="px-3 py-2">{m.memberCategory?.name ?? "—"}</td>
                   <td className="px-3 py-2">
                     <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-800">
                       {m.status}
@@ -169,6 +207,15 @@ export default function MembersTable() {
           </tbody>
         </table>
       </div>
+
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={handlePageChange}
+        onPageSizeChange={handlePageSizeChange}
+      />
     </div>
   );
 }

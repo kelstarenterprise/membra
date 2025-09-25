@@ -13,7 +13,6 @@ import {
   Bell,
   ShieldCheck,
   MapPin,
-  ArrowRight,
 } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -413,30 +412,6 @@ function FeatureCard({
         <span className="font-semibold text-foreground">{title}</span>
       </div>
       <p className="mt-2 text-sm text-muted-foreground">{desc}</p>
-    </div>
-  );
-}
-
-function Step({
-  index,
-  title,
-  desc,
-}: {
-  index: number;
-  title: string;
-  desc: string;
-}) {
-  return (
-    <div className="rounded-2xl border bg-white p-5">
-      <div
-        className={primary(
-          "size-8 rounded-full grid place-items-center bg-indigo-600 text-white font-semibold"
-        )}
-      >
-        {index}
-      </div>
-      <div className="mt-3 font-semibold">{title}</div>
-      <p className="mt-1 text-sm text-muted-foreground">{desc}</p>
     </div>
   );
 }

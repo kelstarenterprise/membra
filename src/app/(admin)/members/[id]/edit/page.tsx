@@ -22,12 +22,49 @@ export default function EditMemberPage() {
     const json = (await res.json()) as { data: Member };
     return json.data;
   }, [id]);
+  async function uploadFile(file: File): Promise<string> {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    });
+    
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({ error: 'Upload failed' }));
+      throw new Error(error.error || 'Failed to upload file');
+    }
+    
+    const result = await res.json();
+    return result.url;
+  }
+
   async function apiUpdate(values: Partial<MemberFormValues>): Promise<Member> {
+    // Handle file upload first if there's a new passport picture
+    let passportPictureUrl: string | null = null;
+    
+    if (values.passportPicture && values.passportPicture.length > 0) {
+      try {
+        passportPictureUrl = await uploadFile(values.passportPicture[0]);
+      } catch (error) {
+        throw new Error(`File upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+    
+    // Prepare member data (excluding the file object)
+    const memberData = {
+      ...values,
+      ...(passportPictureUrl && { passportPictureUrl }),
+      // Remove the file object from the data
+      passportPicture: undefined,
+    };
+    
     const res = await fetch(`/api/members/${id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       cache: "no-store",
-      body: JSON.stringify(values),
+      body: JSON.stringify(memberData),
     });
     if (!res.ok) throw new Error("Update failed");
     const json = (await res.json()) as { data: Member };

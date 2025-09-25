@@ -12,12 +12,49 @@ function MemberFormWithActions() {
   const [submitting, setSubmitting] = useState(false);
   const { success, error: showError } = useFormBannerActions();
 
+  async function uploadFile(file: File): Promise<string> {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const res = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    });
+    
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({ error: 'Upload failed' }));
+      throw new Error(error.error || 'Failed to upload file');
+    }
+    
+    const result = await res.json();
+    return result.url;
+  }
+
   async function apiCreate(values: MemberFormValues): Promise<Member> {
+    // Handle file upload first if there's a passport picture
+    let passportPictureUrl: string | null = null;
+    
+    if (values.passportPicture && values.passportPicture.length > 0) {
+      try {
+        passportPictureUrl = await uploadFile(values.passportPicture[0]);
+      } catch (error) {
+        throw new Error(`File upload failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
+    }
+    
+    // Prepare member data (excluding the file object)
+    const memberData = {
+      ...values,
+      passportPictureUrl,
+      // Remove the file object from the data
+      passportPicture: undefined,
+    };
+    
     const res = await fetch("/api/members", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       cache: "no-store",
-      body: JSON.stringify(values),
+      body: JSON.stringify(memberData),
     });
     if (!res.ok) {
       const j = await res.json().catch(() => ({ error: "Unknown error" }));
