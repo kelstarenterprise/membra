@@ -1,5 +1,6 @@
 {
-  "name": "MEMBRA",
+  "name": "rfp-member-portal",
+  "description": "Official membership platform for Revolution For Prosperity (RFP) - Moruo ke Bophelo",
   "version": "0.1.0",
   "private": true,
   "scripts": {
