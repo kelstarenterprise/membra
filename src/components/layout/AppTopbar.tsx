@@ -16,7 +16,7 @@ export default function AppTopbar({
 }) {
   const isAuthed = role !== "GUEST";
   return (
-    <header className="h-14 bg-gradient-to-r from-blue-800 via-blue-700 to-blue-800 border-b border-blue-600 sticky top-0 z-40 shadow-sm backdrop-blur-sm">
+    <header className="h-14 bg-gradient-to-r from-green-600 via-green-500 to-green-600 border-b border-green-700 sticky top-0 z-40 shadow-lg backdrop-blur-sm">
       <div className="max-w-7xl mx-auto h-full px-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Button
@@ -24,21 +24,23 @@ export default function AppTopbar({
             size="icon"
             onClick={onMenu}
             aria-label="Open menu"
-            className="md:hidden text-white hover:bg-blue-600/50"
+            className="md:hidden text-white hover:bg-green-700/50 hover:shadow-md transition-all"
           >
             <Menu className="h-5 w-5" />
           </Button>
-          <span className="font-semibold text-white">Membership Manager</span>
+          <span className="font-bold text-white text-lg tracking-wide">MEMBERSHIP MANAGER</span>
         </div>
-        <div className="flex items-center gap-2 text-sm text-blue-100">
-          <UserCircle className="h-5 w-5 text-blue-200" />{" "}
-          {name ?? (isAuthed ? "User" : "Guest")}
+        <div className="flex items-center gap-3 text-sm">
+          <div className="flex items-center gap-2 text-green-50 bg-green-700/30 px-3 py-1.5 rounded-full">
+            <UserCircle className="h-4 w-4 text-green-100" />
+            <span className="font-medium">{name ?? (isAuthed ? "User" : "Guest")}</span>
+          </div>
           {isAuthed && (
             <Button
               variant="outline"
               size="sm"
               onClick={() => signOut({ callbackUrl: "/login" })}
-              className="border-blue-600 text-blue-100 bg-blue-400/50 hover:bg-blue-600/50 hover:text-white hover:border-blue-200"
+              className="border-white/30 text-white bg-primary/80 hover:bg-primary hover:text-white hover:border-white/50 hover:shadow-md transition-all font-medium"
             >
               <LogOut className="h-4 w-4 mr-1" /> Logout
             </Button>

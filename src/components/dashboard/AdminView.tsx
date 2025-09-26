@@ -74,12 +74,12 @@ export default function AdminView() {
   return (
     <div className="space-y-6">
       {/* Header Section with Professional Background */}
-      <div className="bg-gradient-to-r from-blue-800 via-blue-700 to-blue-800 rounded-xl p-6 shadow-sm border border-blue-600">
+      <div className="bg-gradient-to-r from-green-600 via-green-500 to-green-600 rounded-xl p-6 shadow-elegant border border-green-700">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-white mb-2">
+          <h1 className="text-3xl font-bold text-white mb-2 tracking-wide">
             Admin Dashboard
           </h1>
-          <p className="text-blue-100">
+          <p className="text-green-50 text-lg">
             {loading ? 'Loading dashboard data...' : 'Real-time membership and financial overview'}
           </p>
         </div>
@@ -89,7 +89,7 @@ export default function AdminView() {
       {loading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {[...Array(4)].map((_, i) => (
-            <div key={i} className="rounded-2xl border-blue-200 shadow-sm p-6">
+            <div key={i} className="rounded-2xl border-green-200 shadow-elegant p-6 bg-white">
               <Skeleton className="h-4 w-24 mb-2" />
               <Skeleton className="h-8 w-16" />
             </div>
@@ -102,8 +102,8 @@ export default function AdminView() {
       {/* Recent Data Sections */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Recent Members */}
-        <div className="bg-white border rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-          <h3 className="text-lg font-semibold text-blue-900 mb-3">
+        <div className="bg-white border border-green-200 rounded-xl p-6 shadow-elegant hover-lift transition-all">
+          <h3 className="text-lg font-semibold text-primary mb-4 border-accent-purple pl-4">
             Recent Members
           </h3>
           {loading ? (
@@ -137,15 +137,15 @@ export default function AdminView() {
                   </div>
                 ))
               ) : (
-                <p className="text-blue-600 text-center py-4">No recent members found</p>
+                <p className="text-accent text-center py-4 font-medium">No recent members found</p>
               )}
             </div>
           )}
         </div>
 
         {/* Recent Payments */}
-        <div className="bg-white border rounded-xl p-6 shadow-sm hover:shadow-md transition-shadow">
-          <h3 className="text-lg font-semibold text-blue-900 mb-3">
+        <div className="bg-white border border-green-200 rounded-xl p-6 shadow-elegant hover-lift transition-all">
+          <h3 className="text-lg font-semibold text-primary mb-4 border-accent-purple pl-4">
             Recent Payments
           </h3>
           {loading ? (
@@ -172,14 +172,14 @@ export default function AdminView() {
                       </p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-green-600">
+                      <p className="font-bold text-accent text-lg">
                         {payment.currency} {payment.amount.toFixed(2)}
                       </p>
                     </div>
                   </div>
                 ))
               ) : (
-                <p className="text-blue-600 text-center py-4">No recent payments found</p>
+                <p className="text-accent text-center py-4 font-medium">No recent payments found</p>
               )}
             </div>
           )}

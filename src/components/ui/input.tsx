@@ -9,33 +9,33 @@ function Input({ className, type, ...props }: React.ComponentProps<"input">) {
       data-slot="input"
       className={cn(
         // Base styles with improved spacing
-        "flex h-10 w-full rounded-lg border border-blue-200 bg-white px-4 py-2.5 text-sm",
+        "flex h-10 w-full rounded-lg border border-border bg-input px-4 py-2.5 text-sm",
         "transition-all duration-200 ease-in-out",
         
         // Placeholder and text colors
-        "placeholder:text-blue-400 text-blue-900",
+        "placeholder:text-muted-foreground text-foreground",
         
         // Focus states with modern ring
-        "focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:outline-none",
+        "focus:border-ring focus:ring-2 focus:ring-ring/20 focus:outline-none",
         
         // Dark mode support
-        "dark:border-blue-600 dark:bg-blue-900/20 dark:text-blue-100 dark:placeholder:text-blue-400",
-        "dark:focus:border-blue-400 dark:focus:ring-blue-400/20",
+        "dark:border-border dark:bg-input dark:text-foreground dark:placeholder:text-muted-foreground",
+        "dark:focus:border-ring dark:focus:ring-ring/20",
         
         // Error states
         "aria-invalid:border-red-500 aria-invalid:ring-2 aria-invalid:ring-red-500/20",
         "dark:aria-invalid:border-red-400 dark:aria-invalid:ring-red-400/20",
         
         // Disabled states
-        "disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-blue-50",
-        "dark:disabled:bg-blue-900/10",
+        "disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted",
+        "dark:disabled:bg-muted",
         
         // File input styles
-        "file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-blue-900",
-        "dark:file:text-blue-100",
+        "file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground",
+        "dark:file:text-foreground",
         
         // Selection colors
-        "selection:bg-blue-500 selection:text-white",
+        "selection:bg-accent selection:text-accent-foreground",
         
         // Shadow for depth
         "shadow-sm hover:shadow-md transition-shadow",

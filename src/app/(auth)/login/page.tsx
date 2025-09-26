@@ -88,7 +88,7 @@ function LoginFormInner() {
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-500 hover:text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 rounded-sm p-1 transition-colors"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-primary hover:text-primary/80 focus:outline-none focus:ring-2 focus:ring-primary/20 rounded-sm p-1 transition-colors"
                       aria-label={showPassword ? "Hide password" : "Show password"}
                     >
                       {showPassword ? (
@@ -148,7 +148,7 @@ function LoginForm() {
     <main className="min-h-screen grid grid-cols-1 lg:grid-cols-2 bg-background">
       {/* Left / Hero panel (large screens) */}
       <section className="relative hidden lg:block">
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800" />
+          <div className="absolute inset-0 bg-gradient-to-br from-green-500 via-green-600 to-green-700" />
         <div className="relative h-full w-full flex items-center justify-center p-12">
           <div className="max-w-md text-white">
             <h2 className="text-3xl font-bold leading-tight">

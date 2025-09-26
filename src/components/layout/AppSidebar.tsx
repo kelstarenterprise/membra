@@ -40,8 +40,10 @@ function NavItem({
   return (
     <Link
       href={href}
-      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors hover:bg-blue-50 ${
-        active ? "bg-blue-100 text-blue-900 font-medium shadow-sm border-l-2 border-blue-600" : "text-blue-700 hover:text-blue-900"
+      className={`flex items-center gap-3 px-4 py-3 rounded-xl text-sm transition-all duration-200 ${
+        active 
+          ? "bg-gradient-to-r from-primary/10 to-primary/5 text-primary font-semibold shadow-md border-l-4 border-primary" 
+          : "text-green-700 hover:text-primary hover:bg-green-50 hover:shadow-sm hover:translate-x-1"
       }`}
     >
       <Icon className="h-4 w-4" /> {label}
@@ -53,8 +55,8 @@ function SidebarNav({ role }: { role: AppRole }) {
   if (role === "ADMIN") {
     return (
       <>
-        <div className="text-xs uppercase text-blue-600 px-3 mb-2 font-semibold">Admin</div>
-        <nav className="space-y-1">
+        <div className="text-xs uppercase text-primary px-4 mb-3 font-bold tracking-widest bg-primary/5 py-2 rounded-lg border border-primary/10">Admin</div>
+        <nav className="space-y-2">
           <NavItem href="/dashboard" label="Dashboard" Icon={LayoutDashboard} />
           <NavItem href="/members" label="Members" Icon={Users} />
           <NavItem href="/dues/plans" label="Dues Plans" Icon={Package} />
@@ -81,8 +83,8 @@ function SidebarNav({ role }: { role: AppRole }) {
   if (role === "MEMBER") {
     return (
       <>
-        <div className="text-xs uppercase text-blue-600 px-3 mb-2 font-semibold">Member</div>
-        <nav className="space-y-1">
+        <div className="text-xs uppercase text-primary px-4 mb-3 font-bold tracking-widest bg-primary/5 py-2 rounded-lg border border-primary/10">Member</div>
+        <nav className="space-y-2">
           <NavItem href="/dashboard" label="Dashboard" Icon={LayoutDashboard} />
           <NavItem href="/statement" label="My Statement" Icon={PiggyBank} />
           <NavItem href="/profile" label="Profile" Icon={User} />
@@ -97,8 +99,8 @@ function SidebarNav({ role }: { role: AppRole }) {
   }
   return (
     <>
-      <div className="text-xs uppercase text-blue-600 px-3 mb-2 font-semibold">Guest</div>
-      <nav className="space-y-1">
+      <div className="text-xs uppercase text-primary px-4 mb-3 font-bold tracking-widest bg-primary/5 py-2 rounded-lg border border-primary/10">Guest</div>
+      <nav className="space-y-2">
         <NavItem href="/login" label="Login" Icon={LogIn} />
       </nav>
     </>
@@ -117,8 +119,8 @@ export default function AppSidebar({
   return (
     <>
       {/* Desktop rail */}
-      <aside className="hidden md:block w-64 shrink-0 border-r border-blue-200 bg-blue-50/30 h-[calc(100dvh-3.5rem)] overflow-y-auto">
-        <div className="p-3">
+      <aside className="hidden md:block w-64 shrink-0 border-r border-green-200 bg-gradient-to-b from-green-50/80 to-white h-[calc(100dvh-3.5rem)] overflow-y-auto shadow-sm">
+        <div className="p-4">
           <SidebarNav role={role} />
         </div>
       </aside>

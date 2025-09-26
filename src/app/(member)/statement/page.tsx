@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import jsPDF from "jspdf";
 
 /* ========= Data types ========= */
 type ApiSingle<T> = { data: T };
@@ -43,37 +44,6 @@ type Payment = {
   createdAt: string;
 };
 
-/* ===== Minimal local types for html2pdf.js (no `any`) ===== */
-type Html2PdfImageType = "jpeg" | "png" | "webp";
-type JsPdfUnit = "pt" | "mm" | "cm" | "in" | "px";
-type JsPdfOrientation = "portrait" | "landscape";
-type JsPdfFormat = "a4" | "letter" | string | [number, number];
-
-type Html2PdfOptions = {
-  margin?: number | number[];
-  filename?: string;
-  image?: { type?: Html2PdfImageType; quality?: number };
-  html2canvas?: { scale?: number; useCORS?: boolean };
-  jsPDF?: {
-    unit?: JsPdfUnit;
-    format?: JsPdfFormat;
-    orientation?: JsPdfOrientation;
-  };
-  pagebreak?: { mode?: Array<"css" | "legacy" | "avoid-all" | "avoid-id"> };
-};
-
-type Html2PdfInstance = {
-  from: (el: HTMLElement) => Html2PdfInstance;
-  set: (opt: Html2PdfOptions) => Html2PdfInstance;
-  save: () => Promise<void>;
-};
-
-type Html2PdfFactory = () => Html2PdfInstance;
-
-function isHtml2PdfFactory(x: unknown): x is Html2PdfFactory {
-  return typeof x === "function";
-}
-/* ========================================================= */
 
 export default function MyStatementPage() {
   const [member, setMember] = useState<Member | null>(null);
@@ -155,29 +125,207 @@ export default function MyStatementPage() {
   const handlePrint = () => window.print();
 
   const handleExportPdf = async () => {
-    const el = printRef.current;
-    if (!el) return;
+    if (!member) return;
+    
+    try {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 20;
+      let yPos = 30;
 
-    const mod = await import("html2pdf.js");
-    const maybeFactory: unknown =
-      "default" in mod
-        ? (mod as { default: unknown }).default
-        : (mod as unknown);
-    if (!isHtml2PdfFactory(maybeFactory)) return;
-    const html2pdf = maybeFactory;
+      // Header
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Member Statement', margin, yPos);
+      yPos += 15;
 
-    const opts: Html2PdfOptions = {
-      margin: 10,
-      filename: `statement_${
-        member ? `${member.firstName}_${member.lastName}` : "member"
-      }.pdf`,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-      pagebreak: { mode: ["css", "legacy"] },
-    };
+      // Member info (right aligned)
+      const memberInfo = [
+        `Member: ${member.firstName} ${member.lastName}`,
+        member.level ? `Level: ${member.level}` : null,
+        `Email: ${member.email}`,
+        `Date: ${new Date().toLocaleDateString()}`
+      ].filter(Boolean) as string[];
 
-    await html2pdf().from(el).set(opts).save();
+      memberInfo.forEach((info, index) => {
+        const textWidth = doc.getTextWidth(info);
+        doc.text(info, pageWidth - margin - textWidth, 30 + (index * 5));
+      });
+
+      yPos += 15;
+
+      // Summary boxes
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      const boxWidth = (pageWidth - margin * 2 - 20) / 3;
+      const boxHeight = 25;
+      
+      // Total Assessed box
+      doc.rect(margin, yPos, boxWidth, boxHeight);
+      doc.text('Total Assessed', margin + 5, yPos + 8);
+      doc.setFontSize(14);
+      doc.text(`${totalAssessed.toFixed(2)} ${currency}`, margin + 5, yPos + 18);
+      
+      // Total Paid box
+      doc.setFontSize(10);
+      doc.rect(margin + boxWidth + 10, yPos, boxWidth, boxHeight);
+      doc.text('Total Paid', margin + boxWidth + 15, yPos + 8);
+      doc.setFontSize(14);
+      doc.text(`${totalPaid.toFixed(2)} ${currency}`, margin + boxWidth + 15, yPos + 18);
+      
+      // Balance box
+      doc.setFontSize(10);
+      doc.rect(margin + (boxWidth + 10) * 2, yPos, boxWidth, boxHeight);
+      doc.text('Balance', margin + (boxWidth + 10) * 2 + 5, yPos + 8);
+      doc.setFontSize(14);
+      const balanceColor = balance >= 0 ? [0, 0, 0] : [220, 53, 69]; // Red for negative
+      doc.setTextColor(balanceColor[0], balanceColor[1], balanceColor[2]);
+      doc.text(`${balance.toFixed(2)} ${currency}`, margin + (boxWidth + 10) * 2 + 5, yPos + 18);
+      doc.setTextColor(0, 0, 0); // Reset to black
+      
+      yPos += boxHeight + 20;
+
+      // Assessed Dues Table
+      if (subs.length > 0) {
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Assessed Dues', margin, yPos);
+        yPos += 15;
+
+        // Table headers
+        doc.setFontSize(9);
+        const colWidths = [30, 60, 30, 25, 35];
+        const headers = ['Period', 'Plan', 'Amount', 'Status', 'Assessed On'];
+        let xPos = margin;
+        
+        // Header background
+        doc.setFillColor(239, 246, 255);
+        doc.rect(margin, yPos - 3, pageWidth - margin * 2, 10, 'F');
+        
+        doc.setFont('helvetica', 'bold');
+        headers.forEach((header, index) => {
+          doc.text(header, xPos + 2, yPos + 5);
+          xPos += colWidths[index];
+        });
+        yPos += 12;
+
+        // Table rows
+        doc.setFont('helvetica', 'normal');
+        subs.forEach((sub, rowIndex) => {
+          if (yPos > 250) { // New page if needed
+            doc.addPage();
+            yPos = 30;
+          }
+          
+          xPos = margin;
+          const rowData = [
+            sub.period,
+            sub.planName,
+            `${sub.amount.toFixed(2)} ${sub.currency}`,
+            sub.status,
+            new Date(sub.createdAt).toLocaleDateString()
+          ];
+          
+          // Alternate row background
+          if (rowIndex % 2 === 1) {
+            doc.setFillColor(248, 250, 252);
+            doc.rect(margin, yPos - 3, pageWidth - margin * 2, 10, 'F');
+          }
+          
+          rowData.forEach((data, index) => {
+            if (index === 2) { // Amount column - right align
+              const textWidth = doc.getTextWidth(data);
+              doc.text(data, xPos + colWidths[index] - textWidth - 2, yPos + 5);
+            } else {
+              doc.text(data, xPos + 2, yPos + 5);
+            }
+            xPos += colWidths[index];
+          });
+          yPos += 12;
+        });
+        
+        yPos += 10;
+      }
+
+      // Payments Table
+      if (pays.length > 0) {
+        if (yPos > 200) { // New page if needed
+          doc.addPage();
+          yPos = 30;
+        }
+        
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Payments', margin, yPos);
+        yPos += 15;
+
+        // Table headers
+        doc.setFontSize(9);
+        const colWidths = [35, 70, 35, 40];
+        const headers = ['Date', 'Plan', 'Amount', 'Reference'];
+        let xPos = margin;
+        
+        // Header background
+        doc.setFillColor(239, 246, 255);
+        doc.rect(margin, yPos - 3, pageWidth - margin * 2, 10, 'F');
+        
+        doc.setFont('helvetica', 'bold');
+        headers.forEach((header, index) => {
+          doc.text(header, xPos + 2, yPos + 5);
+          xPos += colWidths[index];
+        });
+        yPos += 12;
+
+        // Table rows
+        doc.setFont('helvetica', 'normal');
+        pays.forEach((payment, rowIndex) => {
+          if (yPos > 250) { // New page if needed
+            doc.addPage();
+            yPos = 30;
+          }
+          
+          xPos = margin;
+          const rowData = [
+            payment.paidAt,
+            payment.planName,
+            `${payment.amount.toFixed(2)} ${payment.currency}`,
+            payment.reference || '-'
+          ];
+          
+          // Alternate row background
+          if (rowIndex % 2 === 1) {
+            doc.setFillColor(248, 250, 252);
+            doc.rect(margin, yPos - 3, pageWidth - margin * 2, 10, 'F');
+          }
+          
+          rowData.forEach((data, index) => {
+            if (index === 2) { // Amount column - right align
+              const textWidth = doc.getTextWidth(data);
+              doc.text(data, xPos + colWidths[index] - textWidth - 2, yPos + 5);
+            } else {
+              doc.text(data, xPos + 2, yPos + 5);
+            }
+            xPos += colWidths[index];
+          });
+          yPos += 12;
+        });
+      }
+
+      // Footer
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.text(
+        `Generated by ClubManager • ${new Date().toLocaleString()}`,
+        margin,
+        doc.internal.pageSize.getHeight() - 10
+      );
+
+      const filename = `statement_${member.firstName}_${member.lastName}_${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(filename);
+    } catch (error) {
+      console.error('PDF export failed:', error);
+      alert('PDF export failed. Please try again.');
+    }
   };
 
   return (

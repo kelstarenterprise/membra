@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import jsPDF from "jspdf";
 import {
   Select,
   SelectTrigger,
@@ -43,36 +44,8 @@ type PaymentRow = {
   createdAt: string;
 };
 
-/* ===== Minimal local types for html2pdf.js (no 'any') ===== */
-type Html2PdfImageType = "jpeg" | "png" | "webp";
-type JsPdfUnit = "pt" | "mm" | "cm" | "in" | "px";
-type JsPdfOrientation = "portrait" | "landscape";
-type JsPdfFormat = "a4" | "letter" | string | [number, number];
 
-type Html2PdfOptions = {
-  margin?: number | number[];
-  filename?: string;
-  image?: { type?: Html2PdfImageType; quality?: number };
-  html2canvas?: { scale?: number; useCORS?: boolean };
-  jsPDF?: {
-    unit?: JsPdfUnit;
-    format?: JsPdfFormat;
-    orientation?: JsPdfOrientation;
-  };
-  pagebreak?: { mode?: Array<"css" | "legacy" | "avoid-all" | "avoid-id"> };
-};
 
-type Html2PdfInstance = {
-  from: (el: HTMLElement) => Html2PdfInstance;
-  set: (opt: Html2PdfOptions) => Html2PdfInstance;
-  save: () => Promise<void>;
-};
-
-type Html2PdfFactory = () => Html2PdfInstance;
-
-function isFactory(x: unknown): x is Html2PdfFactory {
-  return typeof x === "function";
-}
 /* ========================================================= */
 
 export default function PaymentsReportPage() {
@@ -179,27 +152,123 @@ export default function PaymentsReportPage() {
   };
 
   const exportPDF = async () => {
-    const el = printRef.current;
-    if (!el) return;
+    try {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 20;
+      let yPos = 30;
 
-    const mod = await import("html2pdf.js");
-    const maybeFactory: unknown =
-      "default" in mod
-        ? (mod as { default: unknown }).default
-        : (mod as unknown);
-    if (!isFactory(maybeFactory)) return;
-    const html2pdf = maybeFactory;
+      // Title
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Payments Report', margin, yPos);
+      yPos += 10;
 
-    const opt: Html2PdfOptions = {
-      margin: 10,
-      filename: `payments_${from || "all"}_${to || "all"}.pdf`,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-      pagebreak: { mode: ["css", "legacy"] },
-    };
+      // Filters info
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      const filterText = `Period: ${from || 'All'} to ${to || 'All'} | Generated: ${new Date().toLocaleDateString()}`;
+      doc.text(filterText, margin, yPos);
+      yPos += 15;
 
-    await html2pdf().from(el).set(opt).save();
+      // Summary
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Total Amount: ${total.toFixed(2)} ${currency}`, margin, yPos);
+      doc.text(`Total Payments: ${filtered.length}`, pageWidth - margin - 60, yPos);
+      yPos += 20;
+
+      // Table headers
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'bold');
+      const colWidths = [25, 50, 40, 25, 20, 30];
+      const headers = ['Date', 'Member', 'Plan', 'Amount', 'Currency', 'Reference'];
+      let xPos = margin;
+      
+      // Header background
+      doc.setFillColor(34, 197, 94, 0.1); // Green background for payments
+      doc.rect(margin, yPos - 3, pageWidth - margin * 2, 10, 'F');
+      
+      headers.forEach((header, index) => {
+        doc.text(header, xPos + 2, yPos + 5);
+        xPos += colWidths[index];
+      });
+      yPos += 12;
+
+      // Table rows
+      doc.setFont('helvetica', 'normal');
+      filtered.forEach((payment, rowIndex) => {
+        if (yPos > 250) { // New page if needed
+          doc.addPage();
+          yPos = 30;
+        }
+        
+        xPos = margin;
+        const rowData = [
+          payment.paidAt,
+          payment.memberName,
+          payment.planName,
+          payment.amount.toFixed(2),
+          payment.currency,
+          payment.reference || '-'
+        ];
+        
+        // Alternate row background
+        if (rowIndex % 2 === 1) {
+          doc.setFillColor(240, 253, 244); // Light green for payments
+          doc.rect(margin, yPos - 3, pageWidth - margin * 2, 10, 'F');
+        }
+        
+        rowData.forEach((data, index) => {
+          if (index === 3) { // Amount column - right align
+            const textWidth = doc.getTextWidth(data);
+            doc.text(data, xPos + colWidths[index] - textWidth - 2, yPos + 5);
+          } else {
+            // Truncate long text to fit in column
+            const maxWidth = colWidths[index] - 4;
+            let text = data;
+            while (doc.getTextWidth(text) > maxWidth && text.length > 0) {
+              text = text.substring(0, text.length - 1);
+            }
+            if (text !== data && text.length > 3) {
+              text = text.substring(0, text.length - 3) + '...';
+            }
+            doc.text(text, xPos + 2, yPos + 5);
+          }
+          xPos += colWidths[index];
+        });
+        yPos += 12;
+      });
+
+      // Footer with summary
+      yPos += 10;
+      doc.setFont('helvetica', 'bold');
+      doc.text(`Grand Total: ${total.toFixed(2)} ${currency}`, margin, yPos);
+
+      // Page footers
+      const pageCount = doc.getNumberOfPages();
+      for (let i = 1; i <= pageCount; i++) {
+        doc.setPage(i);
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.text(
+          `Generated by ClubManager • ${new Date().toLocaleString()}`,
+          margin,
+          doc.internal.pageSize.getHeight() - 10
+        );
+        doc.text(
+          `Page ${i} of ${pageCount}`,
+          pageWidth - margin - doc.getTextWidth(`Page ${i} of ${pageCount}`),
+          doc.internal.pageSize.getHeight() - 10
+        );
+      }
+
+      const filename = `payments_${from || "all"}_${to || "all"}.pdf`;
+      doc.save(filename);
+    } catch (error) {
+      console.error('PDF export failed:', error);
+      alert('PDF export failed. Please try again.');
+    }
   };
 
   return (

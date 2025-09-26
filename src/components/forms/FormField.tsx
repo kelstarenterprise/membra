@@ -29,7 +29,7 @@ export function FormField({
         <Label 
           htmlFor={id}
           className={cn(
-            "text-sm font-medium text-blue-800 dark:text-blue-200 block",
+            "text-sm font-semibold text-primary block",
             labelClassName
           )}
         >
@@ -60,7 +60,7 @@ export function FormField({
       )}
       
       {helpText && !error && (
-        <p className="text-xs text-blue-600 dark:text-blue-300 flex items-start gap-1">
+        <p className="text-xs text-accent flex items-start gap-1">
           <svg 
             className="h-3 w-3 flex-shrink-0 mt-0.5" 
             fill="currentColor" 
