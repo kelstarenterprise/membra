@@ -3,6 +3,10 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { useBanner } from "@/components/providers/banner-provider";
+import { Download, CreditCard, Calendar, Shield } from "lucide-react";
 
 type Member = {
   // Auto-generated fields
@@ -42,9 +46,22 @@ type Member = {
   nationality?: string;
 };
 
+interface MemberIdCard {
+  id: string;
+  cardNumber: string;
+  issuedAt: string | null;
+  expiresAt: string | null;
+  status: "PENDING" | "PRINTED" | "ISSUED" | "REVOKED" | "EXPIRED";
+}
+
 export default function MemberProfilePage() {
   const [member, setMember] = useState<Member | null>(null);
+  const [idCards, setIdCards] = useState<MemberIdCard[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingCards, setLoadingCards] = useState(false);
+  const [generatingCard, setGeneratingCard] = useState(false);
+  
+  const { success, error: showError } = useBanner();
 
   useEffect(() => {
     (async () => {
@@ -78,8 +95,71 @@ export default function MemberProfilePage() {
 
       setMember(me);
       setLoading(false);
+      
+      // Load ID cards for the member
+      if (me?.id) {
+        loadIdCards(me.id);
+      }
     })();
   }, []);
+  
+  const loadIdCards = async (memberId: string) => {
+    setLoadingCards(true);
+    try {
+      const response = await fetch(`/api/member-id-cards?memberId=${memberId}`);
+      const data = await response.json();
+      
+      if (response.ok) {
+        setIdCards(data.data || []);
+      } else {
+        console.error("Failed to load ID cards:", data.error);
+      }
+    } catch (error) {
+      console.error("Failed to load ID cards:", error);
+    } finally {
+      setLoadingCards(false);
+    }
+  };
+  
+  const generateIdCard = async () => {
+    if (!member?.id) return;
+    
+    setGeneratingCard(true);
+    try {
+      const response = await fetch(`/api/member-id-cards/generate?memberId=${member.id}`);
+      
+      if (response.ok) {
+        // Trigger download
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        
+        const contentDisposition = response.headers.get('content-disposition');
+        const filename = contentDisposition
+          ? contentDisposition.split('filename=')[1]?.replace(/"/g, '')
+          : 'My_ID_Card.pdf';
+        
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        success("ID card generated!", "Your ID card has been generated and downloaded successfully.");
+        
+        // Refresh ID cards list
+        loadIdCards(member.id);
+      } else {
+        const errorData = await response.json();
+        showError("Failed to generate ID card", errorData.error || "Please contact support for assistance.");
+      }
+    } catch {
+      showError("Failed to generate ID card", "Network error occurred. Please try again.");
+    } finally {
+      setGeneratingCard(false);
+    }
+  };
 
   if (loading) {
     return <div className="p-6">Loading…</div>;
@@ -223,6 +303,127 @@ export default function MemberProfilePage() {
         </div>
       </section>
 
+      {/* ID Card Section */}
+      <section>
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5 text-primary" />
+                <CardTitle>My ID Card</CardTitle>
+              </div>
+              {!loadingCards && (
+                <Button
+                  onClick={generateIdCard}
+                  disabled={generatingCard}
+                  size="sm"
+                >
+                  {generatingCard ? "Generating..." : (
+                    <>
+                      <Download className="w-4 h-4 mr-2" />
+                      {idCards.length > 0 ? "Download Card" : "Generate Card"}
+                    </>
+                  )}
+                </Button>
+              )}
+            </div>
+            <CardDescription>
+              {idCards.length > 0 
+                ? "Download or view your current ID card" 
+                : "Generate your digital membership ID card"}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {loadingCards ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="text-center text-muted-foreground">
+                  <CreditCard className="mx-auto h-8 w-8 animate-pulse mb-2" />
+                  <p>Loading ID cards...</p>
+                </div>
+              </div>
+            ) : idCards.length === 0 ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="text-center">
+                  <CreditCard className="mx-auto h-12 w-12 text-muted-foreground mb-3" />
+                  <h4 className="font-medium text-foreground mb-2">No ID Card Yet</h4>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Generate your digital membership ID card to access member benefits and verify your membership status.
+                  </p>
+                  <Button onClick={generateIdCard} disabled={generatingCard}>
+                    {generatingCard ? "Generating..." : "Generate My ID Card"}
+                    <CreditCard className="w-4 h-4 ml-2" />
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {idCards.map((card) => (
+                  <div key={card.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center gap-4">
+                      <div className="flex-shrink-0">
+                        <div className="w-12 h-8 bg-gradient-to-r from-blue-500 to-blue-600 rounded-md flex items-center justify-center">
+                          <CreditCard className="w-6 h-6 text-white" />
+                        </div>
+                      </div>
+                      <div>
+                        <div className="font-medium">ID Card #{card.cardNumber}</div>
+                        <div className="text-sm text-muted-foreground flex items-center gap-3">
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {card.issuedAt ? (
+                              `Issued: ${new Date(card.issuedAt).toLocaleDateString()}`
+                            ) : (
+                              'Not issued'
+                            )}
+                          </span>
+                          {card.expiresAt && (
+                            <span className="flex items-center gap-1">
+                              <Shield className="w-3 h-3" />
+                              Expires: {new Date(card.expiresAt).toLocaleDateString()}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <Badge
+                        variant={getCardStatusVariant(card.status)}
+                        className={getCardStatusColor(card.status)}
+                      >
+                        {card.status}
+                      </Badge>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={generateIdCard}
+                        disabled={generatingCard}
+                      >
+                        <Download className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+                
+                {/* ID Card Features */}
+                <div className="mt-6 p-4 bg-muted/50 rounded-lg">
+                  <h4 className="font-medium mb-2 flex items-center gap-2">
+                    <Shield className="w-4 h-4 text-primary" />
+                    ID Card Features
+                  </h4>
+                  <ul className="text-sm text-muted-foreground space-y-1">
+                    <li>• Digital verification via QR code</li>
+                    <li>• Member photo and personal information</li>
+                    <li>• Membership level and category</li>
+                    <li>• Secure card number and expiry date</li>
+                    <li>• Print-ready PDF format</li>
+                  </ul>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </section>
+
       {/* Quick actions (optional) */}
       <section className="flex gap-2">
         <Button
@@ -270,6 +471,28 @@ function StatusPill({ status }: { status: Member["status"] }) {
       {status}
     </span>
   );
+}
+
+function getCardStatusVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
+  switch (status) {
+    case "ISSUED": return "default";
+    case "PRINTED": return "secondary";
+    case "PENDING": return "outline";
+    case "REVOKED":
+    case "EXPIRED": return "destructive";
+    default: return "outline";
+  }
+}
+
+function getCardStatusColor(status: string): string {
+  switch (status) {
+    case "PENDING": return "text-yellow-700 border-yellow-300 bg-yellow-50";
+    case "PRINTED": return "text-blue-700 border-blue-300 bg-blue-50";
+    case "ISSUED": return "text-green-700 border-green-300 bg-green-50";
+    case "REVOKED": return "text-red-700 border-red-300 bg-red-50";
+    case "EXPIRED": return "text-gray-700 border-gray-300 bg-gray-50";
+    default: return "text-gray-700 border-gray-300 bg-gray-50";
+  }
 }
 
 function Avatar({

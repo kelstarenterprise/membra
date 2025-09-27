@@ -15,6 +15,7 @@ import {
   UserPlus,
   RefreshCcw,
   BanknoteArrowUp,
+  CreditCard,
 } from "lucide-react";
 import {
   Sheet,
@@ -59,6 +60,7 @@ function SidebarNav({ role }: { role: AppRole }) {
         <nav className="space-y-2">
           <NavItem href="/dashboard" label="Dashboard" Icon={LayoutDashboard} />
           <NavItem href="/members" label="Members" Icon={Users} />
+          <NavItem href="/id-cards" label="ID Cards" Icon={CreditCard} />
           <NavItem href="/dues/plans" label="Dues Plans" Icon={Package} />
           <NavItem
             href="/dues/posting"
@@ -86,6 +88,7 @@ function SidebarNav({ role }: { role: AppRole }) {
         <div className="text-xs uppercase text-primary px-4 mb-3 font-bold tracking-widest bg-primary/5 py-2 rounded-lg border border-primary/10">Member</div>
         <nav className="space-y-2">
           <NavItem href="/dashboard" label="Dashboard" Icon={LayoutDashboard} />
+          <NavItem href="/id-card" label="My ID Card" Icon={CreditCard} />
           <NavItem href="/statement" label="My Statement" Icon={PiggyBank} />
           <NavItem href="/profile" label="Profile" Icon={User} />
           <NavItem
