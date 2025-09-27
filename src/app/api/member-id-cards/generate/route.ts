@@ -194,12 +194,16 @@ export async function GET(req: NextRequest) {
       }
     });
     
+    const now = new Date();
+    
     if (existingCard) {
       await prisma.memberIdCard.update({
         where: { id: existingCard.id },
         data: {
           status: "PRINTED",
-          issuedAt: new Date(),
+          issuedAt: existingCard.issuedAt || now,
+          lastGeneratedAt: now,
+          generationCount: existingCard.generationCount + 1,
         }
       });
     } else {
@@ -207,10 +211,12 @@ export async function GET(req: NextRequest) {
         data: {
           memberId: member.id,
           cardNumber: generatedCard.cardNumber,
-          issuedAt: new Date(),
+          issuedAt: now,
           expiresAt: new Date(Date.now() + 2 * 365 * 24 * 60 * 60 * 1000), // 2 years
           status: "PRINTED",
           qrData: generatedCard.qrData,
+          generationCount: 1,
+          lastGeneratedAt: now,
         }
       });
     }

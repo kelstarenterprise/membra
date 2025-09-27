@@ -161,6 +161,8 @@ export async function POST(req: NextRequest) {
         frontImageUrl: finalFrontImageUrl || null,
         backImageUrl: finalBackImageUrl || null,
         qrData: finalQrData || null,
+        generationCount: generateCard ? 1 : undefined,
+        lastGeneratedAt: generateCard ? new Date() : undefined,
       },
       include: {
         member: {

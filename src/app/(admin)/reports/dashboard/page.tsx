@@ -7,6 +7,8 @@ import {
   Receipt,
   Users,
   AlertCircle,
+  CreditCard,
+  UserX,
 } from "lucide-react";
 
 type ReportLink = {
@@ -41,6 +43,18 @@ const items: ReportLink[] = [
       "See members with pending dues; filter by period or level and export.",
     href: "/reports/outstanding", // create this route
     icon: AlertCircle,
+  },
+  {
+    title: "Members with ID Cards",
+    description: "View members who have generated ID cards with statistics and generation details.",
+    href: "/reports/members-with-id-cards",
+    icon: CreditCard,
+  },
+  {
+    title: "Members without ID Cards",
+    description: "View and generate ID cards for members who don't have cards yet.",
+    href: "/reports/members-without-id-cards",
+    icon: UserX,
   },
 ];
 

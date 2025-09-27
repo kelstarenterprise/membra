@@ -406,10 +406,16 @@ model MemberIdCard {
   frontImageUrl String?
   backImageUrl  String?
   qrData        String?
+  
+  // Generation tracking
+  generationCount Int       @default(1)
+  lastGeneratedAt DateTime?
 
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 
   @@index([memberId, status])
+  @@index([lastGeneratedAt])
+  @@index([generationCount])
   @@map("member_id_cards")
 }
