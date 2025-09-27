@@ -570,7 +570,7 @@ export default function MemberFormNew({
                     height={120}
                     className="rounded-lg object-cover border-2 border-gray-200 shadow-sm"
                   />
-                  <div className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs px-2 py-1 rounded-full">
+                  <div className="absolute -top-2 -right-2 bg-primary text-primary-foreground text-xs px-2 py-1 rounded-full">
                     Preview
                   </div>
                 </div>

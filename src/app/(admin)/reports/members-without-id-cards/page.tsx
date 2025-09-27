@@ -74,30 +74,30 @@ export default function MembersWithoutIdCardsReport() {
 
   const loadMembersWithoutCards = async () => {
     try {
-      // Get all members
-      const membersResponse = await fetch("/api/members");
-      const membersData = await membersResponse.json();
+      // Use the member search API with card info to get all members
+      const response = await fetch("/api/members/search?q=&includeCardInfo=true&limit=1000");
+      const data = await response.json();
       
-      // Get all ID cards
-      const cardsResponse = await fetch("/api/member-id-cards");
-      const cardsData = await cardsResponse.json();
-      
-      if (membersResponse.ok && cardsResponse.ok) {
-        const allMembers = membersData.data || [];
-        const allCards = cardsData.data || [];
+      if (response.ok) {
+        const allMembers = data.data || [];
         
-        // Create set of member IDs that have cards
-        const memberIdsWithCards = new Set(allCards.map((card: { member: { id: string } }) => card.member.id));
-        
-        // Filter members without cards
-        const membersWithoutCards = allMembers.filter((member: Member) => 
-          !memberIdsWithCards.has(member.id)
+        // Filter members who DON'T have ID cards
+        const membersWithoutCards = allMembers.filter((member: { cardStats?: { hasCards?: boolean } }) => 
+          !member.cardStats?.hasCards
         );
         
+        console.log('Total members fetched:', allMembers.length);
+        console.log('Members without cards:', membersWithoutCards.length);
+        console.log('Sample member with cards:', allMembers.find((m: { cardStats?: { hasCards?: boolean } }) => m.cardStats?.hasCards));
+        console.log('Sample member without cards:', membersWithoutCards[0]);
+        
         setMembers(membersWithoutCards);
+      } else {
+        showError("Failed to load members", data.error || "Unknown error occurred");
       }
     } catch (error) {
       console.error("Failed to load members without cards:", error);
+      showError("Failed to load members", "Network error occurred");
     }
   };
 

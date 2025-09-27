@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Pagination from "@/components/ui/pagination";
+import { Users, UserSearch } from "lucide-react";
 import type { MembersListResponse, MemberWithCategory } from "@/types/members";
 
 export default function MembersTable() {
@@ -110,47 +111,105 @@ export default function MembersTable() {
   const filtered = rows;
 
   return (
-    <div className="space-y-3">
-      <div className="flex items-center justify-between gap-2">
-        <h1 className="text-xl font-semibold">Members</h1>
-        <Button onClick={() => router.push("/members/new")}>New Member</Button>
+    <div className="space-y-6">
+      {/* Professional Header */}
+      <div className="relative">
+        <div className="relative bg-card border rounded-2xl p-8 shadow-elegant hover-lift">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-primary rounded-xl shadow-lg">
+                  <Users className="w-8 h-8 text-primary-foreground" />
+                </div>
+                <div>
+                  <h1 className="text-4xl font-bold text-foreground">
+                    Members Management
+                  </h1>
+                  <p className="text-muted-foreground mt-1">
+                    Manage your organization&apos;s member database
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-6 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-accent rounded-full"></div>
+                  <span>Total: {totalItems} members</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-primary rounded-full"></div>
+                  <span>Page {currentPage} of {totalPages}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row gap-3">
+              <Button
+                onClick={() => router.push("/members/new")}
+                className="btn-primary"
+                size="lg"
+              >
+                <UserSearch className="w-5 h-5 mr-2" />
+                <span>New Member</span>
+              </Button>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <Label htmlFor="search" className="text-sm text-blue-700">
-          Search
-        </Label>
-        <Input
-          id="search"
-          placeholder="Name, email, status…"
-          className="max-w-xs"
-          value={search}
-          onChange={(e) => handleSearchChange(e.target.value)}
-        />
+      {/* Enhanced Search Section */}
+      <div className="bg-card border rounded-xl p-6 shadow-sm">
+        <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
+          <div className="flex-1">
+            <Label htmlFor="search" className="text-sm font-medium text-foreground mb-2 block">
+              Search Members
+            </Label>
+            <div className="relative">
+              <UserSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="search"
+                placeholder="Search by name, email, phone, or status..."
+                className="pl-10 focus-ring-green"
+                value={search}
+                onChange={(e) => handleSearchChange(e.target.value)}
+              />
+            </div>
+          </div>
+          {search && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <span>Found {totalItems} result{totalItems !== 1 ? 's' : ''}</span>
+              <button
+                onClick={() => handleSearchChange('')}
+                className="text-primary hover:text-primary/80 underline"
+              >
+                Clear
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       {err && <p className="text-sm text-red-600">Error: {err}</p>}
 
-      <div className="overflow-x-auto border rounded-xl bg-white">
+      <div className="overflow-x-auto border rounded-xl bg-card shadow-elegant">
         <table className="min-w-full text-sm">
-          <thead className="bg-blue-50/80 text-blue-900 border-b border-blue-100">
+          <thead className="table-header-green border-b border-border">
             <tr>
-              <th className="px-4 py-3 text-left font-semibold text-sm border-r border-blue-100 last:border-r-0">
+              <th className="px-4 py-3 text-left font-semibold text-sm border-r border-border last:border-r-0">
                 Name
               </th>
-              <th className="px-4 py-3 text-left font-semibold text-sm border-r border-blue-100 last:border-r-0">
+              <th className="px-4 py-3 text-left font-semibold text-sm border-r border-border last:border-r-0">
                 Email
               </th>
-              <th className="px-4 py-3 text-left font-semibold text-sm border-r border-blue-100 last:border-r-0">
+              <th className="px-4 py-3 text-left font-semibold text-sm border-r border-border last:border-r-0">
                 Phone
               </th>
-              <th className="px-4 py-3 text-left font-semibold text-sm border-r border-blue-100 last:border-r-0">
+              <th className="px-4 py-3 text-left font-semibold text-sm border-r border-border last:border-r-0">
                 Level
               </th>
-              <th className="px-4 py-3 text-left font-semibold text-sm border-r border-blue-100 last:border-r-0">
+              <th className="px-4 py-3 text-left font-semibold text-sm border-r border-border last:border-r-0">
                 Status
               </th>
-              <th className="px-4 py-3 text-right font-semibold text-sm border-r border-blue-100 last:border-r-0">
+              <th className="px-4 py-3 text-right font-semibold text-sm border-r border-border last:border-r-0">
                 Outstanding
               </th>
               <th className="px-4 py-3 text-right font-semibold text-sm w-40">
@@ -173,15 +232,15 @@ export default function MembersTable() {
               </tr>
             ) : (
               filtered.map((m) => (
-                <tr key={m.id} className="bg-white hover:bg-blue-50">
-                  <td className="px-3 py-2">
+                <tr key={m.id} className="bg-card hover:bg-secondary/50 transition-colors">
+                  <td className="px-3 py-2 text-foreground font-medium">
                     {m.firstName} {m.lastName}
                   </td>
-                  <td className="px-3 py-2">{m.email}</td>
-                  <td className="px-3 py-2">{m.phone ?? "—"}</td>
-                  <td className="px-3 py-2">{m.memberCategory?.name ?? "—"}</td>
+                  <td className="px-3 py-2 text-muted-foreground">{m.email}</td>
+                  <td className="px-3 py-2 text-muted-foreground">{m.phone ?? "—"}</td>
+                  <td className="px-3 py-2 text-muted-foreground">{m.memberCategory?.name ?? "—"}</td>
                   <td className="px-3 py-2">
-                    <span className="inline-flex items-center rounded-full bg-blue-100 px-2 py-0.5 text-xs text-blue-800">
+                    <span className="status-success inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium">
                       {m.status}
                     </span>
                   </td>
@@ -192,19 +251,19 @@ export default function MembersTable() {
                       
                       if (balance === 0) {
                         return (
-                          <span className="text-green-700 font-medium">
+                          <span className="text-accent font-medium">
                             {formattedBalance}
                           </span>
                         );
                       } else if (balance > 0 && balance <= 50) {
                         return (
-                          <span className="text-orange-600 font-medium">
+                          <span className="text-yellow-600 font-medium">
                             {formattedBalance}
                           </span>
                         );
                       } else {
                         return (
-                          <span className="text-red-600 font-medium">
+                          <span className="text-destructive font-medium">
                             {formattedBalance}
                           </span>
                         );
