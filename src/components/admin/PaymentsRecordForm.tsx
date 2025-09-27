@@ -11,9 +11,8 @@ import {
   SelectItem,
   SelectValue,
 } from "@/components/ui/select";
-import { FormWithBanner } from "@/components/forms/FormBanner";
 import { useFormBannerActions } from "@/components/forms/FormBanner";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, DollarSign, CreditCard } from "lucide-react";
 
 type Member = {
   id: string;
@@ -62,7 +61,7 @@ type PaymentRow = {
   createdAt: string;
 };
 
-function PaymentsFormContent() {
+export default function PaymentsRecordForm() {
   const { success, error } = useFormBannerActions();
   // search + select member
   const [q, setQ] = useState("");
@@ -276,17 +275,6 @@ function PaymentsFormContent() {
     [selectedAssignedDue, plans, planId]
   );
 
-  // const resetForm = () => {
-  //   setMemberId("");
-  //   setAssignedDues([]);
-  //   setSelectedAssignedDueId("");
-  //   setPlanId("");
-  //   setAmount("");
-  //   setPaidAt("");
-  //   setReference("");
-  //   setPaymentProgress(null);
-  // };
-
   const resetFormKeepMember = () => {
     // Reset form but keep member selection
     setSelectedAssignedDueId("");
@@ -343,20 +331,43 @@ function PaymentsFormContent() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold">Record Payment</h1>
-        <p className="text-sm text-muted-foreground">
-          Search member, select dues type, enter amount & date, then save.
-        </p>
+      {/* Professional Header */}
+      <div className="relative">
+        <div className="relative bg-card border rounded-2xl p-8 shadow-elegant hover-lift">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-primary rounded-xl shadow-lg">
+                  <DollarSign className="w-8 h-8 text-primary-foreground" />
+                </div>
+                <div>
+                  <h1 className="text-4xl font-bold text-foreground">
+                    Record Payment
+                  </h1>
+                  <p className="text-muted-foreground mt-1">
+                    Search member, select dues type, enter amount & date, then save
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Form */}
-      <div className="border-2 rounded-md p-4 overflow-x-auto">
+      {/* Payment Form */}
+      <div className="border rounded-xl p-6 shadow-sm bg-card overflow-x-auto">
+        <div className="flex items-center gap-3 mb-6">
+          <div className="p-2 bg-accent/20 rounded-lg">
+            <CreditCard className="w-5 h-5 text-accent" />
+          </div>
+          <h2 className="text-lg font-semibold text-primary">Payment Details</h2>
+        </div>
+
         <form onSubmit={submit} className="space-y-4">
           {/* Member search & select */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="md:col-span-2">
-              <Label>Search Member</Label>
+              <Label className="text-sm font-medium text-primary">Search Member</Label>
               <Input
                 placeholder="Type name, email, or level (e.g., 'Ama', 'Gold')"
                 value={q}
@@ -366,6 +377,7 @@ function PaymentsFormContent() {
                   // Delay hiding to allow click events on list items to register
                   setTimeout(() => setSearchFocused(false), 150);
                 }}
+                className="border-border focus:ring-primary focus:border-primary"
               />
               {searchFocused && (
                 <div className="mt-2 border rounded-md max-h-56 overflow-auto">
@@ -378,8 +390,8 @@ function PaymentsFormContent() {
                     {memberOptions.map((m) => (
                       <li
                         key={m.id}
-                        className={`px-3 py-2 cursor-pointer hover:bg-accent ${
-                          memberId === m.id ? "bg-accent" : ""
+                        className={`px-3 py-2 cursor-pointer hover:bg-muted transition-colors ${
+                          memberId === m.id ? "bg-accent/20" : ""
                         }`}
                         onClick={() => {
                           setMemberId(m.id);
@@ -404,20 +416,22 @@ function PaymentsFormContent() {
                 </div>
               )}
               {memberId ? (
-                <div className="mt-1 text-2xl">
+                <div className="mt-1 text-sm text-primary bg-secondary/50 p-2 rounded">
                   Selected Member:{" "}
-                  {memberOptions.find((x) => x.id === memberId)?.firstName}{" "}
-                  {memberOptions.find((x) => x.id === memberId)?.lastName}
+                  <span className="font-medium">
+                    {memberOptions.find((x) => x.id === memberId)?.firstName}{" "}
+                    {memberOptions.find((x) => x.id === memberId)?.lastName}
+                  </span>
                 </div>
               ) : null}
             </div>
 
             {/* Member-specific assigned dues select */}
             <div>
-              <Label>Type of Dues</Label>
+              <Label className="text-sm font-medium text-primary">Type of Dues</Label>
               {!memberId ? (
                 <Select disabled value="unset">
-                  <SelectTrigger>
+                  <SelectTrigger className="border-border">
                     <SelectValue placeholder="Select member first" />
                   </SelectTrigger>
                   <SelectContent>
@@ -426,7 +440,7 @@ function PaymentsFormContent() {
                 </Select>
               ) : loadingAssignedDues ? (
                 <Select disabled value="loading">
-                  <SelectTrigger>
+                  <SelectTrigger className="border-border">
                     <SelectValue placeholder="Loading dues..." />
                   </SelectTrigger>
                   <SelectContent>
@@ -436,7 +450,7 @@ function PaymentsFormContent() {
               ) : assignedDues.length === 0 ? (
                 <div className="space-y-2">
                   <Select disabled value="no-dues">
-                    <SelectTrigger>
+                    <SelectTrigger className="border-border">
                       <SelectValue placeholder="No pending dues found" />
                     </SelectTrigger>
                     <SelectContent>
@@ -466,7 +480,7 @@ function PaymentsFormContent() {
                     }
                   }}
                 >
-                  <SelectTrigger>
+                  <SelectTrigger className="border-border focus:ring-primary focus:border-primary">
                     <SelectValue placeholder="Select dues to pay" />
                   </SelectTrigger>
                   <SelectContent>
@@ -488,9 +502,9 @@ function PaymentsFormContent() {
 
           {/* Payment Progress Display */}
           {selectedAssignedDueId && (
-            <div className="bg-gray-50 border rounded-md p-4">
+            <div className="bg-muted/50 border rounded-lg p-4">
               <div className="flex items-center gap-2 mb-2">
-                <h3 className="text-sm font-medium">
+                <h3 className="text-sm font-medium text-primary">
                   Payment Progress for {selectedAssignedDue?.plan?.name || 'Selected Dues'}
                 </h3>
                 {loadingPaymentProgress && (
@@ -504,7 +518,7 @@ function PaymentsFormContent() {
                     const sameTypeDues = assignedDues.filter(d => d.plan.id === selectedAssignedDue.plan.id);
                     if (sameTypeDues.length > 1) {
                       return (
-                        <span className="block mt-1 text-blue-600">
+                        <span className="block mt-1 text-accent">
                           📋 This member has {sameTypeDues.length} {selectedAssignedDue.plan.name} dues assigned
                         </span>
                       );
@@ -524,8 +538,8 @@ function PaymentsFormContent() {
                   <div className="flex items-center justify-between text-sm">
                     <span>Amount Paid:</span>
                     <span className={`font-medium ${
-                      paymentProgress.status === 'PAID' ? 'text-green-600' :
-                      paymentProgress.status === 'PARTIAL' ? 'text-orange-600' :
+                      paymentProgress.status === 'PAID' ? 'text-accent' :
+                      paymentProgress.status === 'PARTIAL' ? 'text-yellow-600' :
                       'text-gray-600'
                     }`}>
                       {paymentProgress.totalPaid.toFixed(2)} {paymentProgress.currency}
@@ -534,17 +548,17 @@ function PaymentsFormContent() {
                   <div className="flex items-center justify-between text-sm">
                     <span>Balance:</span>
                     <span className={`font-medium ${
-                      (paymentProgress.dueAmount - paymentProgress.totalPaid) <= 0 ? 'text-green-600' : 'text-red-600'
+                      (paymentProgress.dueAmount - paymentProgress.totalPaid) <= 0 ? 'text-accent' : 'text-destructive'
                     }`}>
                       {Math.max(0, paymentProgress.dueAmount - paymentProgress.totalPaid).toFixed(2)} {paymentProgress.currency}
                     </span>
                   </div>
-                  <div className="mt-3 bg-gray-200 rounded-full h-2">
+                  <div className="mt-3 bg-muted rounded-full h-2">
                     <div 
                       className={`h-2 rounded-full transition-all ${
-                        paymentProgress.status === 'PAID' ? 'bg-green-500' :
-                        paymentProgress.status === 'PARTIAL' ? 'bg-orange-500' :
-                        'bg-gray-400'
+                        paymentProgress.status === 'PAID' ? 'bg-accent' :
+                        paymentProgress.status === 'PARTIAL' ? 'bg-yellow-500' :
+                        'bg-muted-foreground'
                       }`}
                       style={{ 
                         width: `${Math.min(100, (paymentProgress.totalPaid / paymentProgress.dueAmount) * 100)}%` 
@@ -553,9 +567,9 @@ function PaymentsFormContent() {
                   </div>
                   <div className="flex items-center gap-2 mt-2">
                     <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
-                      paymentProgress.status === 'PAID' ? 'bg-green-100 text-green-800' :
-                      paymentProgress.status === 'PARTIAL' ? 'bg-orange-100 text-orange-800' :
-                      'bg-gray-100 text-gray-800'
+                      paymentProgress.status === 'PAID' ? 'bg-accent/20 text-accent-foreground' :
+                      paymentProgress.status === 'PARTIAL' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-muted text-muted-foreground'
                     }`}>
                       {paymentProgress.status === 'PAID' ? '✅ Fully Paid' :
                        paymentProgress.status === 'PARTIAL' ? '⏳ Partially Paid' :
@@ -577,7 +591,7 @@ function PaymentsFormContent() {
           {/* Amount, date, reference */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <Label>Amount</Label>
+              <Label className="text-sm font-medium text-primary">Amount</Label>
               <Input
                 type="number"
                 inputMode="decimal"
@@ -588,33 +602,39 @@ function PaymentsFormContent() {
                 placeholder={
                   selectedPlan ? String(selectedPlan.amount) : "0.00"
                 }
+                className="border-border focus:ring-primary focus:border-primary"
               />
             </div>
             <div>
-              <Label>Date Paid</Label>
+              <Label className="text-sm font-medium text-primary">Date Paid</Label>
               <Input
                 type="date"
                 value={paidAt}
                 onChange={(e) => setPaidAt(e.target.value)}
+                className="border-border focus:ring-primary focus:border-primary"
               />
             </div>
             <div className="md:col-span-2">
-              <Label>Reference (optional)</Label>
+              <Label className="text-sm font-medium text-primary">Reference (optional)</Label>
               <Input
                 value={reference}
                 onChange={(e) => setReference(e.target.value)}
                 placeholder="Receipt / MoMo ref / Bank slip"
+                className="border-border focus:ring-primary focus:border-primary"
               />
             </div>
           </div>
 
-          <div className="pt-2">
-            <Button
-              type="submit"
-              disabled={saving || !memberId || (!selectedAssignedDueId && !planId) || !amount || !paidAt}
-            >
-              {saving ? "Saving…" : "Save Payment"}
-            </Button>
+          <div className="pt-4 border-t border-border">
+            <div className="flex items-center justify-end">
+              <Button
+                type="submit"
+                disabled={saving || !memberId || (!selectedAssignedDueId && !planId) || !amount || !paidAt}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground px-6 py-2 font-medium shadow-sm"
+              >
+                {saving ? "Saving…" : "Save Payment"}
+              </Button>
+            </div>
           </div>
         </form>
       </div>
@@ -622,19 +642,19 @@ function PaymentsFormContent() {
       {/* Recent payments */}
       <section className="space-y-2">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Recent Payments (5 most recent)</h2>
+          <h2 className="text-lg font-semibold text-primary">Recent Payments (5 most recent)</h2>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setRefreshTrigger(prev => prev + 1)}
             disabled={loadingRecent}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 border-accent hover:bg-accent/10"
           >
             <RefreshCw className={`h-4 w-4 ${loadingRecent ? 'animate-spin' : ''}`} />
             {loadingRecent ? 'Refreshing...' : 'Refresh'}
           </Button>
         </div>
-        <div className="border rounded-md overflow-x-auto">
+        <div className="border rounded-xl overflow-x-auto shadow-sm bg-card">
           {loadingRecent ? (
             <div className="p-8 text-sm text-muted-foreground flex items-center justify-center gap-2">
               <RefreshCw className="h-4 w-4 animate-spin" />
@@ -646,25 +666,25 @@ function PaymentsFormContent() {
             </div>
           ) : (
             <table className="min-w-full text-sm">
-              <thead className="bg-blue-50/80 text-blue-900 border-b border-blue-100">
+              <thead className="bg-secondary text-secondary-foreground border-b border-border">
                 <tr>
-                  <th className="text-left p-3">Member</th>
-                  <th className="text-left p-3">Plan</th>
-                  <th className="text-right p-3">Amount</th>
-                  <th className="text-left p-3">Date</th>
-                  <th className="text-left p-3">Ref</th>
+                  <th className="text-left p-3 font-medium">Member</th>
+                  <th className="text-left p-3 font-medium">Plan</th>
+                  <th className="text-right p-3 font-medium">Amount</th>
+                  <th className="text-left p-3 font-medium">Date</th>
+                  <th className="text-left p-3 font-medium">Ref</th>
                 </tr>
               </thead>
               <tbody>
                 {recent.map((r) => (
-                  <tr key={r.id} className="border-t">
-                    <td className="p-3">{r.memberName}</td>
+                  <tr key={r.id} className="border-t hover:bg-muted transition-colors">
+                    <td className="p-3 font-medium">{r.memberName}</td>
                     <td className="p-3">{r.planName}</td>
-                    <td className="p-3 text-right">
+                    <td className="p-3 text-right font-medium">
                       {r.amount.toFixed(2)} {r.currency}
                     </td>
                     <td className="p-3">{r.paidAt}</td>
-                    <td className="p-3">{r.reference || "-"}</td>
+                    <td className="p-3 text-muted-foreground">{r.reference || "-"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -673,13 +693,5 @@ function PaymentsFormContent() {
         </div>
       </section>
     </div>
-  );
-}
-
-export default function PaymentsPage() {
-  return (
-    <FormWithBanner>
-      <PaymentsFormContent />
-    </FormWithBanner>
   );
 }

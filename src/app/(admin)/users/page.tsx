@@ -153,17 +153,17 @@ export default function UsersAdminPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-xl font-semibold">Users</h1>
-        <p className="text-sm text-muted-foreground">
+      <header className="bg-secondary/50 p-6 rounded-lg shadow-sm border border-border">
+        <h1 className="text-2xl font-semibold text-primary">Users</h1>
+        <p className="text-sm text-muted-foreground mt-1">
           Create and manage application users. Link a user to a Member for
           member self-service.
         </p>
       </header>
 
       {/* Create form */}
-      <section className="border rounded-md p-4 space-y-3">
-        <h2 className="font-semibold">Create User</h2>
+      <section className="border rounded-md p-6 space-y-3 shadow-sm bg-card">
+        <h2 className="font-semibold text-primary">Create User</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <div>
             <Label>Email</Label>
@@ -221,8 +221,8 @@ export default function UsersAdminPage() {
             <div className="mt-2 border rounded max-h-40 overflow-auto">
               <ul className="text-sm">
                 <li
-                  className={`px-3 py-2 cursor-pointer hover:bg-accent ${
-                    !memberId ? "bg-accent" : ""
+                  className={`px-3 py-2 cursor-pointer hover:bg-muted transition-colors ${
+                    !memberId ? "bg-accent/20" : ""
                   }`}
                   onClick={() => setMemberId("")}
                 >
@@ -235,8 +235,8 @@ export default function UsersAdminPage() {
                   return (
                     <li
                       key={m.id}
-                      className={`px-3 py-2 cursor-pointer hover:bg-accent ${
-                        memberId === m.id ? "bg-accent" : ""
+                      className={`px-3 py-2 cursor-pointer hover:bg-muted transition-colors ${
+                        memberId === m.id ? "bg-accent/20" : ""
                       }`}
                       onClick={() => setMemberId(m.id)}
                     >
@@ -253,6 +253,7 @@ export default function UsersAdminPage() {
           <Button
             onClick={createUser}
             disabled={!email.trim() || !username.trim() || !password.trim()}
+            className="bg-primary hover:bg-primary/90 text-primary-foreground"
           >
             Create User
           </Button>
@@ -273,16 +274,16 @@ export default function UsersAdminPage() {
 
         {err && <div className="text-sm text-rose-600">Error: {err}</div>}
 
-        <div className="overflow-x-auto border rounded-md">
+        <div className="overflow-x-auto border rounded-md shadow-sm">
           <table className="min-w-full text-sm">
-            <thead className="bg-blue-50/80 text-blue-900 border-b border-blue-100">
+            <thead className="bg-secondary text-secondary-foreground border-b border-border">
               <tr>
-                <th className="text-left px-4 py-3 font-semibold text-sm border-r border-blue-100 last:border-r-0">Username</th>
-                <th className="text-left px-4 py-3 font-semibold text-sm border-r border-blue-100 last:border-r-0">Email</th>
-                <th className="text-left px-4 py-3 font-semibold text-sm border-r border-blue-100 last:border-r-0">Role</th>
-                <th className="text-left px-4 py-3 font-semibold text-sm border-r border-blue-100 last:border-r-0">Linked Member</th>
-                <th className="text-left px-4 py-3 font-semibold text-sm border-r border-blue-100 last:border-r-0">Created</th>
-                <th className="text-right px-4 py-3 font-semibold text-sm w-36">Actions</th>
+                <th className="text-left px-4 py-3 font-medium text-sm">Username</th>
+                <th className="text-left px-4 py-3 font-medium text-sm">Email</th>
+                <th className="text-left px-4 py-3 font-medium text-sm">Role</th>
+                <th className="text-left px-4 py-3 font-medium text-sm">Linked Member</th>
+                <th className="text-left px-4 py-3 font-medium text-sm">Created</th>
+                <th className="text-right px-4 py-3 font-medium text-sm w-36">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -300,16 +301,24 @@ export default function UsersAdminPage() {
                 </tr>
               ) : (
                 filtered.map((u) => (
-                  <tr key={u.id} className="border-t">
-                    <td className="p-2">{u.username}</td>
+                  <tr key={u.id} className="border-t hover:bg-muted transition-colors">
+                    <td className="p-2 font-medium">{u.username}</td>
                     <td className="p-2">{u.email}</td>
-                    <td className="p-2">{u.role}</td>
+                    <td className="p-2">
+                      <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                        u.role === "ADMIN" 
+                          ? "bg-primary/20 text-primary" 
+                          : "bg-accent/20 text-accent-foreground"
+                      }`}>
+                        {u.role}
+                      </span>
+                    </td>
                     <td className="p-2">
                       {u.member
                         ? `${u.member.firstName} ${u.member.lastName}`
-                        : "—"}
+                        : <span className="text-muted-foreground">—</span>}
                     </td>
-                    <td className="p-2">
+                    <td className="p-2 text-muted-foreground">
                       {new Date(u.createdAt).toLocaleString()}
                     </td>
                     <td className="p-2 text-right">
@@ -317,6 +326,7 @@ export default function UsersAdminPage() {
                         variant="destructive"
                         size="sm"
                         onClick={() => removeUser(u.id)}
+                        className="hover:bg-destructive/90"
                       >
                         Delete
                       </Button>
